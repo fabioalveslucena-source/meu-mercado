@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meu Mercado — Comando de Voz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background: #f4f7f9;
+      color: #173f5f;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 30px 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 10px 25px rgba(23, 63, 95, 0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .icone-topo {
+      font-size: 44px;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 20px;
+      font-weight: 800;
+      color: #173f5f;
+      margin-bottom: 6px;
+    }
+    p {
+      font-size: 13px;
+      color: #718596;
+      line-height: 1.4;
+      margin-bottom: 24px;
+    }
+    .botao-mic {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #188a55 0%, #137346 100%);
+      color: #ffffff;
+      border: none;
+      font-size: 42px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 20px rgba(24, 138, 85, 0.35);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    .botao-mic:active {
+      transform: scale(0.95);
+    }
+    .botao-mic.gravando {
+      background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+      box-shadow: 0 8px 25px rgba(231, 76, 60, 0.5);
+      animation: pulso 1.3s infinite;
+    }
+    @keyframes pulso {
+      0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.6); }
+      70% { transform: scale(1.06); box-shadow: 0 0 0 18px rgba(231, 76, 60, 0); }
+      100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
+    .status {
+      margin-top: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #173f5f;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: #edf3f7;
+      width: 100%;
+    }
+    .status.sucesso {
+      background: #e8f8f0;
+      color: #188a55;
+    }
+    .status.erro {
+      background: #fde8e8;
+      color: #c0392b;
+    }
+    .resultado-texto {
+      margin-top: 14px;
+      font-size: 13px;
+      color: #555555;
+      font-style: italic;
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="icone-topo">🛒</div>
+    <h1>Meu Mercado</h1>
+    <p>Toque no microfone e diga os produtos que deseja comprar.</p>
+
+    <button id="btnMic" class="botao-mic" onclick="alternarGravacao()">
+      🎙️
+    </button>
+
+    <div id="statusTexto" class="status">
+      Toque no microfone para falar
+    </div>
+
+    <div id="resultadoTexto" class="resultado-texto"></div>
+  </div>
+
+  <script>
+    let gravando = false;
+    let recognition = null;
+    const btnMic = document.getElementById('btnMic');
+    const statusTexto = document.getElementById('statusTexto');
+    const resultadoTexto = document.getElementById('resultadoTexto');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      statusTexto.textContent = 'Reconhecimento de voz não suportado neste navegador.';
+      statusTexto.className = 'status erro';
+      btnMic.disabled = true;
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'pt-BR';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = function() {
+        gravando = true;
+        btnMic.classList.add('gravando');
+        statusTexto.textContent = '🔴 Ouvindo... Pode falar!';
+        statusTexto.className = 'status';
+        resultadoTexto.textContent = '';
+      };
+
+      recognition.onresult = function(event) {
+        const texto = event.results[0][0].transcript;
+        resultadoTexto.textContent = '"' + texto + '"';
+        statusTexto.textContent = '✅ Comando enviado com sucesso!';
+        statusTexto.className = 'status sucesso';
+
+        // Envia para a janela do Meu Mercado via postMessage
+        if (window.opener) {
+          window.opener.postMessage({
+            tipo: 'MEU_MERCADO_VOZ',
+            texto: texto
+          }, '*');
+
+          setTimeout(function() {
+            window.close();
+          }, 1200);
+        } else {
+          statusTexto.textContent = 'Janela do app não encontrada para envio.';
+        }
+      };
+
+      recognition.onerror = function(event) {
+        gravando = false;
+        btnMic.classList.remove('gravando');
+        if (event.error === 'not-allowed') {
+          statusTexto.textContent = 'Permissão de microfone negada.';
+        } else if (event.error === 'no-speech') {
+          statusTexto.textContent = 'Nenhuma fala detectada. Tente de novo.';
+        } else {
+          statusTexto.textContent = 'Erro ao ouvir: ' + event.error;
+        }
+        statusTexto.className = 'status erro';
+      };
+
+      recognition.onend = function() {
+        gravando = false;
+        btnMic.classList.remove('gravando');
+      };
+    }
+
+    function alternarGravacao() {
+      if (!recognition) return;
+      if (gravando) {
+        recognition.stop();
+      } else {
+        recognition.start();
+      }
+    }
+
+    // Inicia automaticamente ao abrir para máxima agilidade
+    window.onload = function() {
+      setTimeout(function() {
+        if (recognition && !gravando) {
+          try { recognition.start(); } catch(e) {}
+        }
+      }, 500);
+    };
+  </script>
+
+</body>
+</html>
