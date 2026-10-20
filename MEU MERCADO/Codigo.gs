@@ -1387,11 +1387,7 @@ function obterResumoApp(idLista) {
  * =========================================================
  */
 
-function doGet(e) {
-  // Sincronização e API com o Meu Financeiro
-  if (e && e.parameter && (e.parameter.api === 'extrato' || e.parameter.api === 'compras')) {
-    return responderApiMeuFinanceiro(e);
-  }
+function doGet() {
   return HtmlService
     .createTemplateFromFile('Index')
     .evaluate()
@@ -2466,7 +2462,6 @@ function finalizarListaApp(idLista) {
       abaListas.getRange(linha, 5).setValue(new Date()); // DATA_FECHAMENTO
       abaListas.getRange(linha, 6).setValue('FECHADA');  // STATUS
       SpreadsheetApp.flush();
-      try { sincronizarListaComMeuFinanceiro(idLista); } catch(eSync) { console.warn('Sync Meu Financeiro:', eSync); }
       break;
     }
   }
@@ -2506,7 +2501,6 @@ function reabrirListaApp(idLista) {
       abaListas.getRange(linha, 5).setValue('');         // Limpa DATA_FECHAMENTO
       abaListas.getRange(linha, 6).setValue('ABERTA');   // STATUS ABERTA
       SpreadsheetApp.flush();
-      try { removerListaDoMeuFinanceiro(idLista); } catch(eRem) { console.warn('Rem Meu Financeiro:', eRem); }
       break;
     }
   }
