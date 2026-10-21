@@ -22,10 +22,10 @@
   <div id="app">
 
     <!-- ==================================================================
-         TOPO OFICIAL: PERFIL (COMO APP DE BANCO) + TEMA NOTURNO + VOZ
+         TOPO: PERFIL DA FAMÍLIA (ADMIN FÁBIO) + TEMA + VOZ
     =================================================================== -->
     <header class="topo">
-      <div class="topo-esquerda" onclick="abrirModalPerfil()" title="Alterar perfil ou foto">
+      <div class="topo-esquerda" onclick="abrirModalPerfil()" title="Gerenciar membros da família e fotos">
         <div id="avatarUsuario" class="avatar-usuario">
           👨‍💼
         </div>
@@ -34,7 +34,7 @@
             <span id="topoNomeUsuario">Fábio Lucena</span>
             <small style="font-size: 10px; opacity: 0.8;">▼</small>
           </div>
-          <span id="topoPapelUsuario" class="topo-papel">Administrador</span>
+          <span id="topoPapelUsuario" class="topo-papel">Administrador 👑</span>
         </div>
       </div>
 
@@ -44,15 +44,15 @@
           🌙
         </button>
 
-        <!-- Comando de Voz Geral do Topo -->
-        <button id="btnVozTopo" class="botao-icone" onclick="iniciarVozGeral()" title="Falar Produto para Adicionar">
+        <!-- Microfone Geral para Adicionar Produto -->
+        <button id="btnVozTopo" class="botao-icone" onclick="iniciarVozGeral()" title="Falar Produto para Adicionar à Lista">
           🎙️
         </button>
       </div>
     </header>
 
     <!-- ==================================================================
-         TERMÔMETRO DE ORÇAMENTO (MELHORIA 2)
+         TERMÔMETRO DE ORÇAMENTO
     =================================================================== -->
     <div class="termometro-orcamento">
       <div class="termometro-topo">
@@ -81,29 +81,17 @@
           <strong class="saudacao-titulo">Meu Mercado</strong>
         </div>
 
-        <div class="cards-principais">
-          <!-- Card Minhas Compras (Planejar Lista) -->
-          <div class="card-acao card-compras" onclick="abrirTela('telaCompras', document.getElementById('navCompras'))">
-            <div class="card-acao-icone">🛒</div>
-            <div class="card-acao-texto">
-              <div class="card-acao-titulo">Minhas Compras</div>
-              <div id="inicioSubCompras" class="card-acao-subtitulo">Ver e planejar itens da lista</div>
-            </div>
-            <div class="card-acao-seta">›</div>
+        <!-- Card de Ação Direta para a Lista Ativa de Compras -->
+        <div class="card-acao-grande" onclick="abrirTela('telaCompras', document.getElementById('navCompras'))">
+          <div class="card-acao-icone-g">🛒</div>
+          <div style="flex: 1;">
+            <div style="font-size: 18px; font-weight: 800; margin-bottom: 3px;">Ir para Compras</div>
+            <div id="inicioSubCompras" style="font-size: 13px; opacity: 0.9;">Acessar lista ativa</div>
           </div>
-
-          <!-- Card Modo Mercado (No Supermercado com 1 Mão) -->
-          <div class="card-acao card-modo-mercado" onclick="abrirTela('telaModoMercado', document.getElementById('navModoMercado'))">
-            <div class="card-acao-icone">🏪</div>
-            <div class="card-acao-texto">
-              <div class="card-acao-titulo">Modo Mercado</div>
-              <div class="card-acao-subtitulo">Estou no mercado (falar preços e bipar)</div>
-            </div>
-            <div class="card-acao-seta">›</div>
-          </div>
+          <div style="font-size: 22px; font-weight: 800;">➔</div>
         </div>
 
-        <!-- Sugestões de Reposição Rápida -->
+        <!-- Sugestões de Reposição Inteligente -->
         <div class="secao-sugestoes">
           <div class="secao-titulo">
             <span>💡 O que está faltando em casa?</span>
@@ -116,9 +104,38 @@
       </section>
 
       <!-- ==============================================================
-           2. TELA COMPRAS (LISTA COMPLETA POR CORREDOR)
+           2. TELA COMPRAS (A SUA LISTA DE COMPRAS NO MERCADO)
       =============================================================== -->
       <section id="telaCompras" class="tela">
+        <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 id="tituloListaAtiva" style="font-size: 18px; font-weight: 800;">Compras do Mês</h2>
+            <p style="font-size: 12px; color: var(--texto-secundario);">Toque no microfone 🎙️ de cada item para falar o preço.</p>
+          </div>
+          <button class="btn-qtd" style="width: auto; padding: 6px 12px; background: var(--cor-marca); color: #fff;" onclick="iniciarVozGeral()">
+            + Item por Voz
+          </button>
+        </div>
+
+        <!-- Banner exibido caso a lista tenha sido finalizada (Opção de Reabrir) -->
+        <div id="bannerListaFechada" class="banner-lista-fechada" style="display: none;">
+          <div>
+            <strong style="color: #b45309; font-size: 14px;">Lista Finalizada</strong>
+            <div style="font-size: 12px; color: #92400e;">Esqueceu de comprar algo ou comprou a mais?</div>
+          </div>
+          <button class="btn-reabrir-compra" onclick="reabrirListaAtual()">
+            🔄 Reabrir Lista
+          </button>
+        </div>
+
+        <!-- Barra de adição rápida digitando -->
+        <div class="barra-adicionar-produto">
+          <span>➕</span>
+          <input type="text" id="inputAdicionarManual" placeholder="Adicionar produto na lista... (Enter)" onkeydown="adicionarProdutoManual(event)" />
+          <button class="btn-qtd" style="width: auto; padding: 4px 10px;" onclick="adicionarProdutoManual()">Adicionar</button>
+        </div>
+
+        <!-- Filtros por Corredor do Supermercado -->
         <div class="filtro-corredores">
           <button class="corredor-pill ativo" onclick="filtrarCorredor('todos', this)">Todos</button>
           <button class="corredor-pill" onclick="filtrarCorredor('Hortifrúti', this)">🥬 Hortifrúti</button>
@@ -129,12 +146,13 @@
           <button class="corredor-pill" onclick="filtrarCorredor('Higiene', this)">🧴 Higiene</button>
         </div>
 
-        <div id="listaItensCompras" class="lista-itens" style="margin-bottom: 70px;">
+        <!-- Lista Completa de Itens -->
+        <div id="listaItensCompras" class="lista-itens" style="margin-bottom: 80px;">
           <!-- Injetado via JS -->
         </div>
 
-        <!-- Botão 🏁 Finalizar Compras -->
-        <div class="barra-flutuante-rodape">
+        <!-- Botão 🏁 Finalizar Compras no Rodapé -->
+        <div id="barraFinalizarCompras" class="barra-flutuante-rodape">
           <button class="btn-finalizar-compra" onclick="abrirModalFinalizar()">
             <span>🏁 Finalizar compras</span>
             <span>➔</span>
@@ -143,40 +161,13 @@
       </section>
 
       <!-- ==============================================================
-           3. TELA MODO MERCADO (NO CORREDOR DO SUPERMERCADO)
-      =============================================================== -->
-      <section id="telaModoMercado" class="tela">
-        <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <h2 style="font-size: 18px; font-weight: 800;">🏪 No Supermercado</h2>
-            <p style="font-size: 12px; color: var(--texto-secundario);">Toque no microfone 🎙️ de cada item para falar o preço.</p>
-          </div>
-          <button class="btn-qtd" style="width: auto; padding: 6px 12px; background: var(--cor-marca); color: #fff;" onclick="iniciarVozGeral()">
-            + Item por Voz
-          </button>
-        </div>
-
-        <div id="listaModoMercado" style="margin-bottom: 70px;">
-          <!-- Injetado via JS -->
-        </div>
-
-        <!-- Botão Finalizar Compras também no Modo Mercado -->
-        <div class="barra-flutuante-rodape">
-          <button class="btn-finalizar-compra" onclick="abrirModalFinalizar()">
-            <span>🏁 Finalizar compras</span>
-            <span>➔</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- ==============================================================
-           4. TELA LISTAS (MINHAS LISTAS & NOVA LISTA)
+           3. TELA LISTAS (GERENCIAMENTO DE MÚLTIPLAS LISTAS)
       =============================================================== -->
       <section id="telaListas" class="tela">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <div>
             <h2 style="font-size: 18px; font-weight: 800;">📋 Minhas Listas</h2>
-            <p style="font-size: 12px; color: var(--texto-secundario);">Toque em qualquer lista para abrir e comprar.</p>
+            <p style="font-size: 12px; color: var(--texto-secundario);">Toque em qualquer lista para abrir e fazer as compras.</p>
           </div>
           <button class="btn-qtd" style="width: auto; padding: 8px 16px; background: var(--cor-marca); color: #fff; font-size: 13px;" onclick="abrirModalNovaLista()">
             + Nova Lista
@@ -191,49 +182,38 @@
     </main>
 
     <!-- ==================================================================
-         MODAL DE PERFIL (FOTO E NOME - COMO APP DE BANCO)
+         MODAL DE PERFIL DA FAMÍLIA (ADMINISTRADOR FÁBIO)
     =================================================================== -->
     <div id="modalPerfil" class="modal-overlay">
       <div class="modal-card">
         <div class="recibo-topo">
-          <div class="recibo-icone">👤</div>
-          <div class="recibo-titulo">Perfil de Usuário</div>
+          <div class="recibo-icone">👨‍👩‍👧</div>
+          <div class="recibo-titulo">Família & Usuários</div>
           <div class="recibo-sub">Quem está fazendo as compras hoje?</div>
         </div>
 
-        <!-- Perfis Pré-configurados Rápidos -->
-        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px;">
-          <div class="opcao-pagto" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px;" onclick="trocarPerfilPredefinido('Fábio Lucena', 'Administrador', '👨‍💼')">
-            <span style="font-size: 26px;">👨‍💼</span>
-            <span style="font-size: 12px; font-weight: 800;">Fábio</span>
-          </div>
-
-          <div class="opcao-pagto" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px;" onclick="trocarPerfilPredefinido('Minha Esposa', 'Família', '👩‍💼')">
-            <span style="font-size: 26px;">👩‍💼</span>
-            <span style="font-size: 12px; font-weight: 800;">Esposa</span>
-          </div>
-
-          <div class="opcao-pagto" style="display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 6px;" onclick="trocarPerfilPredefinido('Secretária', 'Compras', '👩‍🍳')">
-            <span style="font-size: 26px;">👩‍🍳</span>
-            <span style="font-size: 12px; font-weight: 800;">Secretária</span>
-          </div>
+        <!-- Lista de Membros da Família -->
+        <div id="gradeUsuariosFamilia" style="margin-bottom: 18px;">
+          <!-- Injetado via JS -->
         </div>
 
-        <!-- Customizar Nome -->
-        <div style="margin-bottom: 14px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 6px;">Nome Personalizado:</label>
-          <input type="text" id="inputNomePerfil" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda-padrao); font-size: 14px; background: var(--bg-card); color: var(--texto-principal);" placeholder="Digite o nome..." />
+        <!-- Adicionar Novo Membro da Família -->
+        <div style="background: var(--bg-card-subtle); padding: 14px; border-radius: var(--raio-md); margin-bottom: 16px;">
+          <div style="font-size: 13px; font-weight: 800; margin-bottom: 8px; color: var(--texto-principal);">+ Adicionar Membro da Família:</div>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="text" id="inputNovoMembroNome" class="campo-input-custom" style="flex: 2; padding: 10px; border-radius: 8px; border: 1px solid var(--borda-padrao); font-size: 13px;" placeholder="Nome da pessoa..." />
+            <input type="text" id="inputNovoMembroPapel" class="campo-input-custom" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--borda-padrao); font-size: 13px;" placeholder="Ex: Filho, Tia..." />
+          </div>
+          <button class="btn-qtd" style="width: 100%; padding: 8px; background: var(--cor-azul); color: #fff; font-size: 13px;" onclick="adicionarNovoMembroFamilia()">
+            Cadastrar Membro
+          </button>
         </div>
 
-        <!-- Upload de Foto Real -->
+        <!-- Upload de Foto Real do Usuário Ativo -->
         <div style="margin-bottom: 18px;">
-          <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 6px;">Carregar Foto Real do Celular:</label>
-          <input type="file" accept="image/*" onchange="carregarFotoPerfilArquivo(event)" style="font-size: 12px;" />
+          <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 6px;">Alterar Foto Real do Usuário Ativo:</label>
+          <input type="file" accept="image/*" onchange="carregarFotoAdminArquivo(event)" style="font-size: 12px;" />
         </div>
-
-        <button class="btn-confirmar-finalizar" onclick="salvarPerfilCustomizado()">
-          ✓ Salvar Perfil
-        </button>
 
         <button class="btn-cancelar-modal" onclick="fecharModalPerfil()">
           Fechar
@@ -249,21 +229,21 @@
         <div class="recibo-topo">
           <div class="recibo-icone">📋</div>
           <div class="recibo-titulo">Criar Nova Lista</div>
-          <div class="recibo-sub">Dê um nome para a sua nova lista de compras</div>
+          <div class="recibo-sub">Crie uma lista separada para cada tipo de compra</div>
         </div>
 
         <div style="margin-bottom: 14px;">
           <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 6px;">Nome da Lista:</label>
-          <input type="text" id="nomeNovaLista" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda-padrao); font-size: 15px; background: var(--bg-card); color: var(--texto-principal);" placeholder="Ex: Feira de Sábado, Churrasco, Farmácia..." />
+          <input type="text" id="nomeNovaLista" class="campo-input-custom" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda-padrao); font-size: 15px;" placeholder="Ex: Feira de Sábado, Churrasco, Farmácia..." />
         </div>
 
         <div style="margin-bottom: 20px;">
           <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 6px;">Meta de Orçamento (R$):</label>
-          <input type="number" id="metaNovaLista" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda-padrao); font-size: 15px; background: var(--bg-card); color: var(--texto-principal);" placeholder="350" value="350" />
+          <input type="number" id="metaNovaLista" class="campo-input-custom" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda-padrao); font-size: 15px;" placeholder="350" value="350" />
         </div>
 
         <button class="btn-confirmar-finalizar" onclick="salvarNovaLista()">
-          ✓ Criar Lista & Começar
+          ✓ Criar Lista & Abrir
         </button>
 
         <button class="btn-cancelar-modal" onclick="fecharModalNovaLista()">
@@ -345,7 +325,7 @@
     </div>
 
     <!-- ==================================================================
-         MENU INFERIOR OFICIAL
+         MENU INFERIOR (3 ABAS PRINCIPAIS CLARAS E INTUITIVAS)
     =================================================================== -->
     <nav class="navegacao">
       <button class="nav-item ativo" id="navInicio" onclick="abrirTela('telaInicio', this)">
@@ -358,14 +338,9 @@
         <small>Compras</small>
       </button>
 
-      <button class="nav-item" id="navModoMercado" onclick="abrirTela('telaModoMercado', this)">
-        <span>🏪</span>
-        <small>Mercado</small>
-      </button>
-
       <button class="nav-item" id="navListas" onclick="abrirTela('telaListas', this)">
         <span>📋</span>
-        <small>Listas</small>
+        <small>Minhas Listas</small>
       </button>
     </nav>
 

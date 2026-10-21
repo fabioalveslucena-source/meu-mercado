@@ -1,7 +1,8 @@
 /* ============================================================================
-   🛒 DESIGN SYSTEM — MEU MERCADO (PWA 2026)
+   🛒 DESIGN SYSTEM — MEU MERCADO (PWA 2026 v2.2)
    Cores Oficiais do Drive D: Gradiente Azul Petróleo (#092A42 -> #287EA5)
-   Suporte a Tema Claro (Diurno) e Tema Escuro (Noturno)
+   Identidade Verde Esmeralda PWA: #188A55 / #0F5735
+   Suporte a Modo Noturno e Diurno, Família e Gestão de Listas
 ============================================================================ */
 
 :root {
@@ -48,7 +49,7 @@
 }
 
 /* ============================================================================
-   TEMA NOTURNO (MODO ESCURO - DRIVE D & FINANCEIRO)
+   TEMA NOTURNO
 ============================================================================ */
 body.tema-escuro {
   --bg-primary: #0b1929;
@@ -131,6 +132,12 @@ body.tema-escuro .chip-sugestao {
   color: var(--texto-principal);
 }
 
+body.tema-escuro .campo-input-custom {
+  background: #132f4c;
+  border-color: #1e3a5f;
+  color: #e7ebf0;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -145,7 +152,7 @@ html, body {
   background-color: var(--bg-primary);
   color: var(--texto-principal);
   overflow-x: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 #app {
@@ -155,17 +162,17 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 92px;
+  padding-bottom: 96px;
   position: relative;
   background-color: var(--bg-primary);
 }
 
 /* ============================================================================
-   TOPO OFICIAL COM PERFIL DO USUÁRIO (COMO APP DE BANCO)
+   TOPO: PERFIL DA FAMÍLIA (ADMIN FÁBIO) + TEMA + VOZ
 ============================================================================ */
 .topo {
   width: 100%;
-  padding: 14px 18px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -180,21 +187,27 @@ html, body {
 .topo-esquerda {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--raio-md);
+  transition: background 0.15s ease;
 }
 
-/* Foto / Avatar estilo banco */
+.topo-esquerda:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .avatar-usuario {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #ffffff;
   border: 2px solid #5090d3;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-size: 22px;
   overflow: hidden;
   box-shadow: 0 4px 10px rgba(0,0,0,0.25);
   flex-shrink: 0;
@@ -222,7 +235,7 @@ html, body {
 
 .topo-papel {
   font-size: 11px;
-  opacity: 0.85;
+  opacity: 0.88;
   font-weight: 600;
 }
 
@@ -254,16 +267,15 @@ html, body {
 }
 
 /* ============================================================================
-   TERMÔMETRO DE ORÇAMENTO (MELHORIA 2)
+   TERMÔMETRO DE ORÇAMENTO
 ============================================================================ */
 .termometro-orcamento {
   background: var(--bg-card);
   padding: 12px 18px;
-  margin: 14px 16px 4px 16px;
+  margin: 12px 16px 2px 16px;
   border-radius: var(--raio-md);
   box-shadow: var(--sombra-card);
   border: 1px solid var(--borda-padrao);
-  transition: all 0.3s ease;
 }
 
 .termometro-topo {
@@ -318,7 +330,7 @@ html, body {
 }
 
 /* ============================================================================
-   TELAS & CONTEÚDO
+   TELAS
 ============================================================================ */
 .conteudo-telas {
   flex: 1;
@@ -327,7 +339,7 @@ html, body {
 
 .tela {
   display: none;
-  animation: fadeIn 0.25s ease-out;
+  animation: fadeIn 0.22s ease-out;
 }
 
 .tela.ativa {
@@ -340,7 +352,7 @@ html, body {
 }
 
 /* ============================================================================
-   TELA INÍCIO: CARDS PRINCIPAIS
+   TELA INÍCIO
 ============================================================================ */
 .saudacao {
   margin-bottom: 16px;
@@ -361,75 +373,39 @@ html, body {
   letter-spacing: -0.3px;
 }
 
-.cards-principais {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.card-acao {
-  background: var(--bg-card);
+.card-acao-grande {
+  background: linear-gradient(135deg, var(--topo-gradiente-inicio) 0%, var(--topo-gradiente-fim) 100%);
   border-radius: var(--raio-lg);
-  padding: 18px 20px;
+  padding: 20px;
+  color: #ffffff;
   display: flex;
   align-items: center;
   gap: 16px;
-  box-shadow: var(--sombra-card);
-  border: 1px solid var(--borda-padrao);
+  box-shadow: 0 8px 24px rgba(9, 42, 66, 0.22);
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  margin-bottom: 16px;
+  transition: transform 0.18s ease;
 }
 
-.card-acao:active {
+.card-acao-grande:active {
   transform: scale(0.98);
 }
 
-.card-acao-icone {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--raio-md);
+.card-acao-icone-g {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.2);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 30px;
   flex-shrink: 0;
-}
-
-.card-compras .card-acao-icone {
-  background: var(--cor-azul-light);
-  color: var(--cor-azul);
-}
-
-.card-modo-mercado .card-acao-icone {
-  background: var(--cor-marca-light);
-  color: var(--cor-marca);
-}
-
-.card-acao-texto {
-  flex: 1;
-}
-
-.card-acao-titulo {
-  font-size: 16px;
-  font-weight: 800;
-  color: var(--texto-principal);
-  margin-bottom: 2px;
-}
-
-.card-acao-subtitulo {
-  font-size: 13px;
-  color: var(--texto-secundario);
-}
-
-.card-acao-seta {
-  font-size: 18px;
-  color: var(--texto-suave);
-  font-weight: 700;
+  backdrop-filter: blur(10px);
 }
 
 /* ============================================================================
-   SUGESTÕES INTELIGENTES (MELHORIA 4)
+   SUGESTÕES INTELIGENTES
 ============================================================================ */
 .secao-sugestoes {
   background: var(--bg-card);
@@ -437,7 +413,7 @@ html, body {
   padding: 16px;
   box-shadow: var(--sombra-card);
   border: 1px solid var(--borda-padrao);
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .secao-titulo {
@@ -479,13 +455,37 @@ html, body {
 }
 
 /* ============================================================================
-   FILTROS DE CORREDOR / SETOR (MELHORIA 3)
+   BARRA DE ADIÇÃO RÁPIDA NO TOPO DA LISTA DE COMPRAS
+============================================================================ */
+.barra-adicionar-produto {
+  background: var(--bg-card);
+  padding: 10px 14px;
+  border-radius: var(--raio-md);
+  border: 1px solid var(--borda-padrao);
+  box-shadow: var(--sombra-card);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.barra-adicionar-produto input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  font-size: 14px;
+  color: var(--texto-principal);
+}
+
+/* ============================================================================
+   FILTROS DE CORREDOR
 ============================================================================ */
 .filtro-corredores {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 4px 0 12px 0;
+  padding: 4px 0 10px 0;
   margin-bottom: 8px;
   scrollbar-width: none;
 }
@@ -495,19 +495,19 @@ html, body {
 }
 
 .corredor-pill {
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: var(--raio-full);
   background: var(--bg-card);
   border: 1px solid var(--borda-padrao);
   color: var(--texto-secundario);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
 .corredor-pill.ativo {
@@ -518,7 +518,7 @@ html, body {
 }
 
 /* ============================================================================
-   LISTA DE ITENS DE COMPRAS & MICROFONE NO ITEM
+   LISTA DE ITENS: CHECKBOX, MICROFONE, PREÇO, QTD, LIXEIRA
 ============================================================================ */
 .lista-itens {
   display: flex;
@@ -529,10 +529,10 @@ html, body {
 .item-card {
   background: var(--bg-card);
   border-radius: var(--raio-md);
-  padding: 14px 16px;
+  padding: 12px 14px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   box-shadow: var(--sombra-card);
   border: 1px solid var(--borda-padrao);
   transition: all 0.2s ease;
@@ -577,7 +577,7 @@ html, body {
 }
 
 .item-nome {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--texto-principal);
   white-space: nowrap;
@@ -629,21 +629,22 @@ html, body {
 .item-qtd-controle {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: var(--bg-card-subtle);
-  padding: 4px 6px;
+  padding: 3px 6px;
   border-radius: var(--raio-sm);
+  flex-shrink: 0;
 }
 
 .btn-qtd {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
   border: none;
   background: var(--bg-card);
   color: var(--texto-principal);
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -652,14 +653,14 @@ html, body {
 }
 
 .qtd-valor {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  min-width: 18px;
+  min-width: 16px;
   text-align: center;
 }
 
 .item-preco-tag {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   color: var(--texto-principal);
   cursor: pointer;
@@ -667,7 +668,7 @@ html, body {
   background: var(--bg-card-subtle);
   border-radius: var(--raio-sm);
   border: 1px dashed #cbd5e1;
-  min-width: 60px;
+  min-width: 58px;
   text-align: right;
   flex-shrink: 0;
 }
@@ -678,12 +679,34 @@ html, body {
   border: 1px solid rgba(24, 138, 85, 0.3);
 }
 
+/* Botão Lixeira para excluir item com 1 clique */
+.btn-excluir-item {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  color: var(--texto-suave);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.btn-excluir-item:hover, .btn-excluir-item:active {
+  color: var(--cor-vermelho);
+  background: var(--cor-vermelho-light);
+}
+
 /* ============================================================================
-   BOTÃO DEFINITIVO: 🏁 FINALIZAR COMPRAS
+   RODAPÉ DA LISTA: FINALIZAR OU REABRIR COMPRAS
 ============================================================================ */
 .barra-flutuante-rodape {
   position: fixed;
-  bottom: 80px;
+  bottom: 76px;
   left: 0;
   right: 0;
   padding: 10px 16px;
@@ -697,12 +720,12 @@ html, body {
 .btn-finalizar-compra {
   width: 100%;
   max-width: 648px;
-  padding: 15px 22px;
+  padding: 14px 22px;
   background: linear-gradient(135deg, #188a55 0%, #10633c 100%);
   color: #ffffff;
   border: none;
   border-radius: var(--raio-md);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -710,15 +733,43 @@ html, body {
   box-shadow: 0 6px 22px rgba(24, 138, 85, 0.38);
   cursor: pointer;
   pointer-events: auto;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: transform 0.18s ease;
 }
 
 .btn-finalizar-compra:active {
   transform: scale(0.98);
 }
 
+/* Botão de Reativar / Continuar Comprando caso tenha finalizado */
+.banner-lista-fechada {
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: var(--raio-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+body.tema-escuro .banner-lista-fechada {
+  background: #3b2803;
+  border-color: #5c3e07;
+}
+
+.btn-reabrir-compra {
+  background: #f59e0b;
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--raio-sm);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
 /* ============================================================================
-   TECLADO NUMÉRICO RÁPIDO — MAQUININHA (MELHORIA 1)
+   TECLADO MAQUININHA & MODAIS
 ============================================================================ */
 .drawer-teclado {
   position: fixed;
@@ -777,7 +828,6 @@ html, body {
   font-weight: 800;
   color: var(--texto-principal);
   cursor: pointer;
-  transition: background 0.1s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -800,9 +850,6 @@ html, body {
   border-color: #fca5a5;
 }
 
-/* ============================================================================
-   MODAIS (PERFIL, RECIBO, NOVA LISTA)
-============================================================================ */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -834,6 +881,8 @@ html, body {
   padding: 24px;
   box-shadow: var(--sombra-flutuante);
   animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 @keyframes modalPop {
@@ -847,8 +896,8 @@ html, body {
 }
 
 .recibo-icone {
-  font-size: 46px;
-  margin-bottom: 8px;
+  font-size: 42px;
+  margin-bottom: 6px;
 }
 
 .recibo-titulo {
@@ -923,12 +972,12 @@ html, body {
 
 .btn-confirmar-finalizar {
   width: 100%;
-  padding: 15px;
+  padding: 14px;
   border-radius: var(--raio-md);
   border: none;
   background: linear-gradient(135deg, #188a55 0%, #10633c 100%);
   color: #ffffff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 800;
   cursor: pointer;
   display: flex;
@@ -936,7 +985,7 @@ html, body {
   justify-content: center;
   gap: 8px;
   box-shadow: 0 6px 20px rgba(24, 138, 85, 0.35);
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .btn-cancelar-modal {
@@ -951,14 +1000,14 @@ html, body {
 }
 
 /* ============================================================================
-   MENU INFERIOR OFICIAL (HERDADO DO DRIVE D)
+   MENU INFERIOR (3 ABAS PRINCIPAIS: INÍCIO, COMPRAS, LISTAS)
 ============================================================================ */
 .navegacao {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 72px;
+  height: 68px;
   background: #ffffff;
   border-top: 1px solid #e2e8f0;
   display: flex;
@@ -968,7 +1017,6 @@ html, body {
   margin: 0 auto;
   z-index: 100;
   box-shadow: 0 -4px 18px rgba(9, 42, 66, 0.06);
-  transition: background 0.3s ease;
 }
 
 .nav-item {
@@ -982,8 +1030,7 @@ html, body {
   background: none;
   color: var(--texto-suave);
   cursor: pointer;
-  gap: 3px;
-  transition: color 0.15s ease;
+  gap: 2px;
 }
 
 .nav-item span {
