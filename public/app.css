@@ -238,6 +238,61 @@ html, body {
   font-weight: 600;
 }
 
+/* Marca Centralizada Elegante no Topo */
+.topo-marca-centro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 0 8px;
+  overflow: hidden;
+}
+
+.marca-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  padding: 4px 10px;
+  border-radius: var(--raio-full);
+  backdrop-filter: blur(8px);
+  max-width: 100%;
+}
+
+.marca-icone {
+  font-size: 14px;
+}
+
+.marca-titulos {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.marca-nome {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
+.marca-sub {
+  font-size: 9px;
+  font-weight: 600;
+  opacity: 0.85;
+  color: #a5f3fc;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+@media (max-width: 380px) {
+  .marca-sub { display: none; }
+  .marca-badge { padding: 4px 6px; }
+  .topo-nome-usuario { font-size: 13px; }
+}
+
 .topo-acoes {
   display: flex;
   align-items: center;
@@ -519,29 +574,114 @@ html, body {
 }
 
 /* ============================================================================
-   TELA COMPRAS: SELETOR DE LISTAS & FILTROS POR CORREDOR
+   TELA COMPRAS: SELETOR DE LISTAS AMPLO & SEM CORTES + BOTÃO ITEM POR VOZ
 ============================================================================ */
 .barra-selecao-lista {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   background: var(--bg-card);
-  padding: 12px 16px;
+  padding: 12px 14px;
   border-radius: var(--raio-md);
   border: 1px solid var(--borda-padrao);
   box-shadow: var(--sombra-card);
   margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.linha-topo-seletor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bloco-dropdown-lista {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.label-seletor {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--texto-secundario);
+  white-space: nowrap;
+}
+
+.custom-select-wrapper {
+  flex: 1;
+  min-width: 0;
 }
 
 .seletor-lista-dropdown {
+  width: 100%;
   background: none;
-  border: none;
-  font-size: 16px;
+  border: 1px solid var(--borda-suave);
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 15px;
   font-weight: 800;
   color: var(--texto-principal);
   cursor: pointer;
   outline: none;
-  max-width: 220px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.badge-status-ativa {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--raio-full);
+  background: var(--cor-marca-light);
+  color: var(--cor-marca);
+  white-space: nowrap;
+}
+
+.badge-status-fechada {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: var(--raio-full);
+  background: #f1f5f9;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.linha-sub-seletor {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 4px;
+  border-top: 1px dashed var(--borda-suave);
+}
+
+.btn-item-voz-moderno {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--raio-full);
+  background: linear-gradient(135deg, #188a55 0%, #10633c 100%);
+  color: #ffffff;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(24, 138, 85, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.btn-item-voz-moderno:active {
+  transform: scale(0.96);
+}
+
+.icone-mic-glow {
+  font-size: 14px;
 }
 
 .data-criacao-lista {
@@ -1136,4 +1276,273 @@ body.tema-escuro .banner-lista-fechada {
 .nav-item.ativo span {
   transform: translateY(-2px);
   transition: transform 0.15s ease;
+}
+
+/* ============================================================================
+   REPOSIÇÃO INTELIGENTE DA DESPENSA (DESIGN MODERNO & VISUAL FORTE)
+============================================================================ */
+.card-reposicao-despensa {
+  background: var(--bg-card);
+  border-radius: var(--raio-lg);
+  padding: 18px 16px;
+  border: 1px solid var(--borda-padrao);
+  box-shadow: var(--sombra-card);
+  margin-top: 14px;
+}
+
+.reposicao-cabecalho {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.reposicao-titulo {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--texto-principal);
+}
+
+.reposicao-sub {
+  font-size: 12px;
+  color: var(--texto-secundario);
+  margin-top: 2px;
+}
+
+.badge-despensa-tag {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: var(--raio-full);
+  background: rgba(24, 138, 85, 0.12);
+  color: var(--cor-marca);
+  border: 1px solid rgba(24, 138, 85, 0.25);
+}
+
+.filtro-despensa-categorias {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.filtro-despensa-categorias::-webkit-scrollbar {
+  display: none;
+}
+
+.pill-despensa {
+  padding: 5px 12px;
+  border-radius: var(--raio-full);
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--borda-padrao);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--texto-secundario);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.pill-despensa.ativa {
+  background: var(--cor-azul);
+  color: #ffffff;
+  border-color: var(--cor-azul);
+}
+
+.grade-produtos-reposicao {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+@media (min-width: 480px) {
+  .grade-produtos-reposicao {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.card-produto-reposicao {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--borda-padrao);
+  border-radius: var(--raio-md);
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.card-produto-reposicao:hover {
+  border-color: var(--cor-marca);
+}
+
+.card-prod-topo {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.card-prod-icone {
+  font-size: 22px;
+}
+
+.card-prod-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-prod-nome {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--texto-principal);
+  line-height: 1.2;
+}
+
+.card-prod-preco {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cor-marca);
+  margin-top: 2px;
+}
+
+.btn-adicionar-reposicao {
+  width: 100%;
+  padding: 7px 8px;
+  border-radius: 8px;
+  border: none;
+  background: var(--cor-marca);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.btn-adicionar-reposicao.adicionado {
+  background: #10b981;
+}
+
+/* ============================================================================
+   MODAIS DE VOZ INTELIGENTES (ANIMAÇÕES E PREVIEWS)
+============================================================================ */
+.dica-voz-box {
+  background: var(--bg-card-subtle);
+  border-left: 4px solid var(--cor-marca);
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.status-escuta-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 12px 0;
+}
+
+.onda-voz-animada {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+}
+
+.onda-voz-animada span {
+  display: block;
+  width: 4px;
+  height: 12px;
+  background: var(--cor-marca);
+  border-radius: var(--raio-full);
+  animation: pulsoOnda 1s infinite ease-in-out;
+}
+
+.onda-voz-animada span:nth-child(2) { animation-delay: 0.15s; }
+.onda-voz-animada span:nth-child(3) { animation-delay: 0.3s; }
+.onda-voz-animada span:nth-child(4) { animation-delay: 0.45s; }
+.onda-voz-animada span:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes pulsoOnda {
+  0%, 100% { height: 10px; opacity: 0.5; }
+  50% { height: 32px; opacity: 1; }
+}
+
+.texto-status-escuta {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--cor-marca);
+  margin-top: 6px;
+}
+
+.caixa-transcricao-voz {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--borda-padrao);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 12px;
+  text-align: left;
+  min-height: 52px;
+}
+
+.texto-transcrito-real {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--texto-principal);
+  font-style: italic;
+  word-break: break-word;
+}
+
+.card-item-interpretado {
+  background: rgba(24, 138, 85, 0.08);
+  border: 1.5px solid var(--cor-marca);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
+.badge-cat-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--raio-full);
+  background: var(--cor-marca-light);
+  color: var(--cor-marca);
+}
+
+body.tema-escuro .card-reposicao-despensa {
+  background: #0f2744;
+  border-color: #1e3a5f;
+}
+
+body.tema-escuro .pill-despensa {
+  background: #132f4c;
+  border-color: #1e3a5f;
+  color: #aab4be;
+}
+
+body.tema-escuro .pill-despensa.ativa {
+  background: var(--cor-azul);
+  color: #ffffff;
+}
+
+body.tema-escuro .card-produto-reposicao {
+  background: #132f4c;
+  border-color: #1e3a5f;
+}
+
+body.tema-escuro .caixa-transcricao-voz,
+body.tema-escuro .dica-voz-box {
+  background: #132f4c;
+  border-color: #1e3a5f;
 }

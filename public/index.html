@@ -22,7 +22,7 @@
   <div id="app">
 
     <!-- ==================================================================
-         TOPO: PERFIL DA FAMÍLIA (ADMIN FÁBIO) + TEMA + VOZ
+         TOPO: PERFIL DA FAMÍLIA (ADMIN FÁBIO) + MARCA CENTRAL + TEMA + VOZ
     =================================================================== -->
     <header class="topo">
       <div class="topo-esquerda" onclick="abrirModalPerfil()" title="Gerenciar membros da família e fotos">
@@ -38,6 +38,17 @@
         </div>
       </div>
 
+      <!-- Marca Centralizada / Preenche o Espaço com Elegância -->
+      <div class="topo-marca-centro">
+        <div class="marca-badge">
+          <span class="marca-icone">🛒</span>
+          <div class="marca-titulos">
+            <span class="marca-nome">Meu Mercado</span>
+            <span class="marca-sub">Sistema de Compras</span>
+          </div>
+        </div>
+      </div>
+
       <div class="topo-acoes">
         <!-- Alternador Modo Noturno / Diurno -->
         <button id="btnTema" class="botao-icone" onclick="alternarTema()" title="Alternar Modo Noturno / Diurno">
@@ -45,7 +56,7 @@
         </button>
 
         <!-- Microfone Geral para Adicionar Produto -->
-        <button id="btnVozTopo" class="botao-icone" onclick="iniciarVozGeral()" title="Falar Produto para Adicionar à Lista">
+        <button id="btnVozTopo" class="botao-icone" onclick="abrirModalVozCompleta()" title="Falar Produto Completo (Nome, Quantidade e Preço)">
           🎙️
         </button>
       </div>
@@ -103,14 +114,29 @@
           </div>
         </div>
 
-        <!-- Sugestões de Reposição Inteligente -->
-        <div class="secao-sugestoes">
-          <div class="secao-titulo">
-            <span>💡 O que está faltando em casa?</span>
-            <small style="color: var(--cor-marca); font-size: 11px;">Toque para adicionar</small>
+        <!-- Reposição Inteligente da Despensa (Layout Moderno & Intuitivo) -->
+        <div class="card-reposicao-despensa">
+          <div class="reposicao-cabecalho">
+            <div>
+              <div class="reposicao-titulo">💡 O que está faltando em casa?</div>
+              <div class="reposicao-sub">Toque nos itens que costumam acabar para adicionar à lista ativa</div>
+            </div>
+            <span class="badge-despensa-tag">Despensa</span>
           </div>
-          <div id="chipsSugestoes" class="chips-sugestoes">
-            <!-- Injetado via JS -->
+
+          <!-- Filtro rápido de categorias da despensa -->
+          <div class="filtro-despensa-categorias">
+            <button class="pill-despensa ativa" onclick="filtrarSugestoesDespensa('todos', this)">Todos</button>
+            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Mercearia', this)">🥫 Mercearia</button>
+            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Laticínios', this)">🧀 Frios & Leite</button>
+            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Hortifrúti', this)">🥬 Frutas & Legumes</button>
+            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Carnes', this)">🥩 Carnes</button>
+            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Limpeza', this)">🧼 Limpeza</button>
+          </div>
+
+          <!-- Grade de produtos recomendados para reposição -->
+          <div id="gridProdutosReposicao" class="grade-produtos-reposicao">
+            <!-- Cards injetados via JS -->
           </div>
         </div>
       </section>
@@ -178,18 +204,27 @@
       =============================================================== -->
       <section id="telaCompras" class="tela">
         
-        <!-- Barra de Seleção de Listas Abertas (Fábio pode alternar de lista facilmente) -->
+        <!-- Barra de Seleção de Listas Abertas (Organizada, Ampla e Sem Cortes de Texto) -->
         <div class="barra-selecao-lista">
-          <div>
-            <div style="font-size: 11px; font-weight: 700; color: var(--texto-secundario);">LISTA ATIVA:</div>
-            <select id="seletorListaAtiva" class="seletor-lista-dropdown" onchange="trocarListaComprasDropdown(this.value)">
-              <!-- Opções injetadas via JS -->
-            </select>
-            <div id="dataListaAtiva" class="data-criacao-lista">📅 Criada em 21/10/2026</div>
+          <div class="linha-topo-seletor">
+            <div class="bloco-dropdown-lista">
+              <span class="label-seletor">LISTA ATIVA:</span>
+              <div class="custom-select-wrapper">
+                <select id="seletorListaAtiva" class="seletor-lista-dropdown" onchange="trocarListaComprasDropdown(this.value)">
+                  <!-- Opções limpas e completas injetadas via JS -->
+                </select>
+              </div>
+            </div>
+            <span id="badgeStatusLista" class="badge-status-ativa">Aberta</span>
           </div>
-          <button class="btn-qtd" style="width: auto; padding: 6px 12px; background: var(--cor-marca); color: #fff;" onclick="iniciarVozGeral()">
-            + Item por Voz
-          </button>
+
+          <div class="linha-sub-seletor">
+            <div id="dataListaAtiva" class="data-criacao-lista">📅 Criada em 21/10/2026</div>
+            <button class="btn-item-voz-moderno" onclick="abrirModalVozCompleta()" title="Adicionar item falando nome, quantidade e preço de uma vez só">
+              <span class="icone-mic-glow">🎙️</span>
+              <span>Item por voz</span>
+            </button>
+          </div>
         </div>
 
         <!-- Banner exibido caso a lista tenha sido finalizada (Opção de Reabrir) -->
@@ -394,6 +429,159 @@
 
         <button class="btn-cancelar-modal" onclick="fecharModalFinalizar()">
           Voltar às compras
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         NOVO MODAL 1: ITEM POR VOZ COMPLETO (PRODUTO, QTD E PREÇO)
+    =================================================================== -->
+    <div id="modalVozCompleta" class="modal-overlay">
+      <div class="modal-card">
+        <div class="recibo-topo">
+          <div class="recibo-icone" id="iconeOuvindoCompleto">🎙️</div>
+          <div class="recibo-titulo">Item por Voz</div>
+          <div class="recibo-sub">Diga produto, quantidade e valor de uma vez só</div>
+        </div>
+
+        <!-- Dica prática de como falar -->
+        <div class="dica-voz-box">
+          <span style="font-weight: 700; color: var(--cor-marca);">💡 Exemplo de como falar:</span>
+          <div style="font-style: italic; margin-top: 4px; color: var(--texto-principal);">
+            "Creme de leite, quatro, 2,70 cada"<br/>
+            ou "Arroz branco, dois a 29,90"
+          </div>
+        </div>
+
+        <!-- Animação de escuta ativa -->
+        <div class="status-escuta-container">
+          <div id="ondaVozPulso" class="onda-voz-animada">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div id="textoStatusVoz" class="texto-status-escuta">
+            Ouvindo com atenção... Pode falar com calma!
+          </div>
+        </div>
+
+        <!-- Transcrição em tempo real -->
+        <div class="caixa-transcricao-voz">
+          <div style="font-size: 11px; font-weight: 700; color: var(--texto-secundario); margin-bottom: 4px;">O que você falou:</div>
+          <div id="textoFaladoEmTempoReal" class="texto-transcrito-real">
+            Aguardando sua voz...
+          </div>
+        </div>
+
+        <!-- Prévia do item interpretado -->
+        <div id="cardItemInterpretado" class="card-item-interpretado" style="display: none;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--cor-marca); text-transform: uppercase; margin-bottom: 6px;">✨ Item Reconhecido com Sucesso:</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+            <strong id="previewProdNome" style="font-size: 16px; color: var(--texto-principal);">Creme de leite</strong>
+            <span id="previewProdCat" class="badge-cat-tag">🧀 Laticínios</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 13px; color: var(--texto-secundario); margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--borda-padrao);">
+            <span>Qtd: <strong id="previewProdQtd" style="color: var(--texto-principal);">4</strong> un</span>
+            <span>Unitário: <strong id="previewProdPreco" style="color: var(--texto-principal);">R$ 2,70</strong></span>
+            <span>Total: <strong id="previewProdTotal" style="color: var(--cor-marca); font-size: 15px;">R$ 10,80</strong></span>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+          <button id="btnConfirmarVozCompleta" class="btn-confirmar-finalizar" onclick="confirmarInsercaoItemVozCompleto()" style="display: none;">
+            ✅ Confirmar e Adicionar à Lista
+          </button>
+
+          <button class="btn-cancelar-modal" onclick="fecharModalVozCompleta()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         NOVO MODAL 2: VOZ DO ITEM NO SUPERMERCADO (QUANTIDADE E PREÇO)
+    =================================================================== -->
+    <div id="modalVozItemRapido" class="modal-overlay">
+      <div class="modal-card">
+        <div class="recibo-topo">
+          <div class="recibo-icone">🎙️</div>
+          <div class="recibo-titulo" id="tituloItemVozRapido">Produto</div>
+          <div class="recibo-sub">Fale a quantidade e o preço unitário</div>
+        </div>
+
+        <div class="dica-voz-box">
+          <span style="font-weight: 700; color: var(--cor-marca);">💡 Diga por exemplo:</span>
+          <div style="font-style: italic; margin-top: 4px; color: var(--texto-principal);">
+            "Sete unidades a 5,70" ou apenas "5,70"
+          </div>
+        </div>
+
+        <div class="status-escuta-container">
+          <div class="onda-voz-animada">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div id="textoStatusVozItem" class="texto-status-escuta">
+            Ouvindo valor e quantidade...
+          </div>
+        </div>
+
+        <div class="caixa-transcricao-voz">
+          <div style="font-size: 11px; font-weight: 700; color: var(--texto-secundario); margin-bottom: 4px;">Transcrição:</div>
+          <div id="transcricaoItemRapido" class="texto-transcrito-real">
+            Fale agora...
+          </div>
+        </div>
+
+        <!-- Prévia do valor detectado -->
+        <div id="previewItemRapidoBox" class="card-item-interpretado" style="display: none;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--cor-marca); margin-bottom: 6px;">VALOR & QUANTIDADE ENTENDIDOS:</div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px;">
+            <span>Quantidade: <strong id="itemRapidoQtdVal" style="font-size: 16px; color: var(--texto-principal);">7</strong></span>
+            <span>Preço Unitário: <strong id="itemRapidoPrecoVal" style="font-size: 16px; color: var(--texto-principal);">R$ 5,70</strong></span>
+          </div>
+          <div style="text-align: right; margin-top: 6px; font-size: 13px; color: var(--texto-secundario); border-top: 1px dashed var(--borda-padrao); padding-top: 6px;">
+            Subtotal: <strong id="itemRapidoSubtotalVal" style="font-size: 16px; color: var(--cor-marca);">R$ 39,90</strong>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+          <button id="btnConfirmarItemRapido" class="btn-confirmar-finalizar" onclick="confirmarVozItemRapido()" style="display: none;">
+            ✅ Confirmar e Colocar no Carrinho
+          </button>
+          <button class="btn-cancelar-modal" onclick="fecharModalVozItemRapido()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         NOVO MODAL 3: DIGITAR QUANTIDADE / PESO EM KG (EX: 1 KG, 0.75 KG)
+    =================================================================== -->
+    <div id="modalEditarQuantidade" class="modal-overlay">
+      <div class="modal-card">
+        <div class="recibo-topo">
+          <div class="recibo-icone">⚖️</div>
+          <div class="recibo-titulo" id="tituloEditarQtd">Ajustar Quantidade / Peso</div>
+          <div class="recibo-sub">Informe a quantidade exata ou peso da balança</div>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 6px;">Quantidade ou Quilos (kg):</label>
+          <input type="number" id="inputNovaQuantidade" step="0.1" min="0.1" class="campo-input-custom" style="width: 100%; padding: 14px; font-size: 20px; font-weight: 800; text-align: center; border-radius: 12px; border: 2px solid var(--cor-marca);" placeholder="1.0" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 18px;">
+          <button class="btn-qtd" style="width: auto; padding: 10px;" onclick="definirQtdRapida(0.5)">0,5 kg</button>
+          <button class="btn-qtd" style="width: auto; padding: 10px;" onclick="definirQtdRapida(1.0)">1,0 kg</button>
+          <button class="btn-qtd" style="width: auto; padding: 10px;" onclick="definirQtdRapida(1.5)">1,5 kg</button>
+          <button class="btn-qtd" style="width: auto; padding: 10px;" onclick="definirQtdRapida(2.0)">2,0 kg</button>
+        </div>
+
+        <button class="btn-confirmar-finalizar" onclick="salvarNovaQuantidade()">
+          Salvar Quantidade
+        </button>
+        <button class="btn-cancelar-modal" onclick="fecharModalEditarQuantidade()">
+          Cancelar
         </button>
       </div>
     </div>
