@@ -3,162 +3,294 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Meu Mercado</title>
-  <meta name="description" content="Meu Mercado - Sua Lista de Compras Inteligente">
-  <meta name="theme-color" content="#188A55">
+  <title>Meu Mercado — Lista de Compras Inteligente</title>
+  
+  <meta name="theme-color" content="#092a42">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Meu Mercado">
   <meta name="mobile-web-app-capable" content="yes">
+  
   <link rel="icon" type="image/png" href="/favicon.png">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="manifest" href="/manifest.json">
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0F5735;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    #app-container {
-      width: 100%;
-      height: 100%;
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    #mercado-frame {
-      width: 100%;
-      height: 100%;
-      border: none;
-      flex: 1;
-      display: block;
-      background-color: #FFFFFF;
-    }
-
-    /* Tela de Carregamento Elegante */
-    #splash-screen {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: linear-gradient(135deg, #188A55 0%, #10633C 50%, #0B4228 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justifyContent: center;
-      z-index: 9999;
-      color: #FFFFFF;
-      transition: opacity 0.4s ease, visibility 0.4s ease;
-    }
-
-    #splash-screen.oculto {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .splash-logo {
-      width: 88px;
-      height: 88px;
-      border-radius: 26px;
-      background: #FFFFFF;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 46px;
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-      border: 3px solid #F8D117;
-      margin-bottom: 20px;
-      animation: pulse 1.8s infinite ease-in-out;
-    }
-
-    .splash-title {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      margin-bottom: 6px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .splash-sub {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.85);
-      font-weight: 500;
-    }
-
-    .splash-spinner {
-      margin-top: 28px;
-      width: 32px;
-      height: 32px;
-      border: 3.5px solid rgba(255, 255, 255, 0.25);
-      border-top-color: #F8D117;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-  </style>
+  
+  <link rel="stylesheet" href="/app.css">
 </head>
 <body>
 
-  <div id="app-container">
-    <!-- Tela de Abertura -->
-    <div id="splash-screen">
-      <div class="splash-logo">🛒</div>
-      <div class="splash-title">Meu Mercado</div>
-      <div class="splash-sub">Conectando à sua lista de compras...</div>
-      <div class="splash-spinner"></div>
+  <div id="app">
+
+    <!-- ==================================================================
+         TOPO OFICIAL (GRADIENTE AZUL PETRÓLEO #092A42 -> #287EA5)
+    =================================================================== -->
+    <header class="topo">
+      <div class="topo-identidade">
+        <div class="topo-titulo">
+          <span>🛒</span> Meu Mercado
+        </div>
+        <div class="topo-subtitulo">
+          Sua lista de compras inteligente
+        </div>
+      </div>
+
+      <div class="topo-acoes">
+        <button id="btnVozTopo" class="botao-icone" onclick="iniciarVozNativa()" title="Adicionar por Voz" aria-label="Microfone">
+          🎙️
+        </button>
+        <button class="botao-icone" onclick="abrirTela('telaProdutos', null)" title="Catálogo de Produtos" aria-label="Produtos">
+          📦
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================================================================
+         TERMÔMETRO DE ORÇAMENTO (MELHORIA 2)
+    =================================================================== -->
+    <div class="termometro-orcamento">
+      <div class="termometro-topo">
+        <span>Gasto no Carrinho</span>
+        <div class="termometro-valores">
+          <span id="termometroGasto" class="termometro-gasto">R$ 0,00</span>
+          <span id="termometroMeta" class="termometro-meta">Meta: R$ 350,00</span>
+        </div>
+      </div>
+      <div class="termometro-barra-fundo">
+        <div id="termometroBarra" class="termometro-barra-progresso" style="width: 0%;"></div>
+      </div>
     </div>
 
-    <!-- Frame Seguro do Meu Mercado -->
-    <iframe
-      id="mercado-frame"
-      src="https://script.google.com/macros/s/AKfycbyVzn-uiAsqoXOxDGDqeVTTr3pFWPEc6SfqmiTH8j3YTAnr4MPrKRAXtQjbPI7VHp3x9w/exec"
-      title="Meu Mercado"
-      allow="geolocation; camera; microphone"
-    ></iframe>
+    <!-- ==================================================================
+         ÁREA DAS TELAS
+    =================================================================== -->
+    <main class="conteudo-telas">
+
+      <!-- ==============================================================
+           1. TELA INÍCIO (HERDADA DO DRIVE D + MELHORIAS)
+      =============================================================== -->
+      <section id="telaInicio" class="tela ativa">
+        
+        <div class="saudacao">
+          <span class="saudacao-ola">Olá, Fábio! 👋</span>
+          <strong class="saudacao-titulo">Vamos às compras?</strong>
+        </div>
+
+        <div class="cards-principais">
+          <!-- Card Compras -->
+          <div class="card-acao card-compras" onclick="abrirTela('telaCompras', document.getElementById('navCompras'))">
+            <div class="card-acao-icone">🛒</div>
+            <div class="card-acao-texto">
+              <div class="card-acao-titulo">Minhas Compras</div>
+              <div id="inicioSubCompras" class="card-acao-subtitulo">Acessar lista atual de compras</div>
+            </div>
+            <div class="card-acao-seta">›</div>
+          </div>
+
+          <!-- Card Modo Mercado -->
+          <div class="card-acao card-modo-mercado" onclick="abrirTela('telaModoMercado', document.getElementById('navModoMercado'))">
+            <div class="card-acao-icone">🏪</div>
+            <div class="card-acao-texto">
+              <div class="card-acao-titulo">Modo Mercado</div>
+              <div class="card-acao-subtitulo">Comprar agora com uma só mão</div>
+            </div>
+            <div class="card-acao-seta">›</div>
+          </div>
+        </div>
+
+        <!-- Sugestões Inteligentes de Reposição (Melhoria 4) -->
+        <div class="secao-sugestoes">
+          <div class="secao-titulo">
+            <span>💡 O que está acabando em casa?</span>
+            <small style="color: var(--cor-marca); font-size: 11px;">Toque para adicionar</small>
+          </div>
+          <div id="chipsSugestoes" class="chips-sugestoes">
+            <!-- Gerado via JS -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           2. TELA COMPRAS (LISTA POR CORREDOR + FINALIZAR COMPRA)
+      =============================================================== -->
+      <section id="telaCompras" class="tela">
+        
+        <!-- Filtro por Corredor/Setor (Melhoria 3) -->
+        <div class="filtro-corredores">
+          <button class="corredor-pill ativo" onclick="filtrarCorredor('todos', this)">Todos</button>
+          <button class="corredor-pill" onclick="filtrarCorredor('Hortifrúti', this)">🥬 Hortifrúti</button>
+          <button class="corredor-pill" onclick="filtrarCorredor('Carnes', this)">🥩 Carnes</button>
+          <button class="corredor-pill" onclick="filtrarCorredor('Laticínios', this)">🧀 Laticínios</button>
+          <button class="corredor-pill" onclick="filtrarCorredor('Mercearia', this)">🥫 Mercearia</button>
+          <button class="corredor-pill" onclick="filtrarCorredor('Limpeza', this)">🧼 Limpeza</button>
+          <button class="corredor-pill" onclick="filtrarCorredor('Higiene', this)">🧴 Higiene</button>
+          <button class="corredor-pill" onclick="filtrarCorredor('Padaria', this)">🍞 Padaria</button>
+        </div>
+
+        <!-- Lista Dinâmica de Itens -->
+        <div id="listaItensCompras" class="lista-itens" style="margin-bottom: 70px;">
+          <!-- Itens injetados via JS -->
+        </div>
+
+        <!-- Barra com o Botão 🏁 Finalizar Compras -->
+        <div class="barra-flutuante-rodape">
+          <button class="btn-finalizar-compra" onclick="abrirModalFinalizar()">
+            <span>🏁 Finalizar compras</span>
+            <span>➔</span>
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ==============================================================
+           3. TELA MODO MERCADO (USO NO SUPERMERCADO COM 1 MÃO)
+      =============================================================== -->
+      <section id="telaModoMercado" class="tela">
+        <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <h2 style="font-size: 18px; font-weight: 800;">🏪 No Supermercado</h2>
+          <button class="btn-qtd" style="width: auto; padding: 6px 12px;" onclick="iniciarVozNativa()">
+            🎙️ Falar Produto
+          </button>
+        </div>
+
+        <div id="listaModoMercado">
+          <!-- Gerado via JS -->
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           4. TELA LISTAS (GERENCIAMENTO DE LISTAS)
+      =============================================================== -->
+      <section id="telaListas" class="tela">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="font-size: 18px; font-weight: 800;">📋 Minhas Listas</h2>
+          <button class="btn-qtd" style="width: auto; padding: 6px 14px; background: var(--cor-marca); color: #fff;" onclick="adicionarNovaLista()">
+            + Nova Lista
+          </button>
+        </div>
+
+        <div id="containerListas">
+          <!-- Gerado via JS -->
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           5. TELA PRODUTOS (CATÁLOGO COMPLETO)
+      =============================================================== -->
+      <section id="telaProdutos" class="tela">
+        <div style="margin-bottom: 14px;">
+          <h2 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">📦 Catálogo de Produtos</h2>
+          <p style="font-size: 13px; color: var(--texto-secundario);">Toque em qualquer produto para adicionar à sua lista ativa.</p>
+        </div>
+
+        <div id="containerCatalogoProdutos">
+          <!-- Gerado via JS -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ==================================================================
+         DRAWER TECLADO NUMÉRICO RÁPIDO (MAQUININHA - MELHORIA 1)
+    =================================================================== -->
+    <div id="drawerTeclado" class="drawer-teclado">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span style="font-size: 13px; font-weight: 700; color: var(--texto-secundario);">Digitar Preço Unitário</span>
+        <button style="border: none; background: none; font-size: 18px; cursor: pointer; color: var(--texto-suave);" onclick="fecharTecladoPreco()">✕</button>
+      </div>
+
+      <div class="teclado-display">
+        <div id="tecladoItemNome" class="teclado-item-nome">Produto</div>
+        <div id="tecladoValor" class="teclado-valor">R$ 0,00</div>
+      </div>
+
+      <div class="teclado-grade">
+        <button class="btn-num" onclick="digitoTeclado(1)">1</button>
+        <button class="btn-num" onclick="digitoTeclado(2)">2</button>
+        <button class="btn-num" onclick="digitoTeclado(3)">3</button>
+
+        <button class="btn-num" onclick="digitoTeclado(4)">4</button>
+        <button class="btn-num" onclick="digitoTeclado(5)">5</button>
+        <button class="btn-num" onclick="digitoTeclado(6)">6</button>
+
+        <button class="btn-num" onclick="digitoTeclado(7)">7</button>
+        <button class="btn-num" onclick="digitoTeclado(8)">8</button>
+        <button class="btn-num" onclick="digitoTeclado(9)">9</button>
+
+        <button class="btn-num apagar" onclick="apagarTeclado()">⌫</button>
+        <button class="btn-num" onclick="digitoTeclado(0)">0</button>
+        <button class="btn-num ok" onclick="confirmarTecladoPreco()">OK ✓</button>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         MODAL RECIBO DIGITAL (MELHORIA 5 + BIP DE FINALIZAÇÃO)
+    =================================================================== -->
+    <div id="modalRecibo" class="modal-overlay">
+      <div class="modal-card">
+        <div class="recibo-topo">
+          <div class="recibo-icone">🧾</div>
+          <div class="recibo-titulo">Finalizar Compras</div>
+          <div class="recibo-sub">Confira o resumo antes de arquivar e integrar</div>
+        </div>
+
+        <div class="recibo-resumo">
+          <div>
+            <div class="recibo-total-lbl">Total da Compra</div>
+            <div id="reciboQtdItens" style="font-size: 11px; color: var(--texto-suave); margin-top: 2px;">0 itens</div>
+          </div>
+          <div id="reciboTotalVal" class="recibo-total-val">R$ 0,00</div>
+        </div>
+
+        <div class="recibo-seletor-pagamento">
+          <label>Forma de Pagamento:</label>
+          <div class="recibo-opcoes-pagto">
+            <div class="opcao-pagto selecionada" onclick="selecionarFormaPagto('💳 Crédito', this)">💳 Crédito</div>
+            <div class="opcao-pagto" onclick="selecionarFormaPagto('🏦 Débito', this)">🏦 Débito</div>
+            <div class="opcao-pagto" onclick="selecionarFormaPagto('📱 Pix', this)">📱 Pix</div>
+            <div class="opcao-pagto" onclick="selecionarFormaPagto('💵 Dinheiro', this)">💵 Dinheiro</div>
+          </div>
+        </div>
+
+        <button class="btn-confirmar-finalizar" onclick="confirmarFinalizarCompraDefinitivo()">
+          <span>✓ Confirmar & Lançar no Financeiro</span>
+        </button>
+
+        <button class="btn-cancelar-modal" onclick="fecharModalFinalizar()">
+          Voltar às compras
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         MENU INFERIOR OFICIAL (HERDADO DO DRIVE D)
+    =================================================================== -->
+    <nav class="navegacao">
+      <button class="nav-item ativo" id="navInicio" onclick="abrirTela('telaInicio', this)">
+        <span>🏠</span>
+        <small>Início</small>
+      </button>
+
+      <button class="nav-item" id="navCompras" onclick="abrirTela('telaCompras', this)">
+        <span>🛒</span>
+        <small>Compras</small>
+      </button>
+
+      <button class="nav-item" id="navModoMercado" onclick="abrirTela('telaModoMercado', this)">
+        <span>🏪</span>
+        <small>Mercado</small>
+      </button>
+
+      <button class="nav-item" id="navListas" onclick="abrirTela('telaListas', this)">
+        <span>📋</span>
+        <small>Listas</small>
+      </button>
+    </nav>
+
   </div>
 
-  <script>
-    const frame = document.getElementById('mercado-frame');
-    const splash = document.getElementById('splash-screen');
-
-    // Ocultar a tela de splash assim que a WebApp carregar
-    frame.addEventListener('load', () => {
-      setTimeout(() => {
-        splash.classList.add('oculto');
-      }, 500);
-    });
-
-    // Fallback de segurança se o evento de load demorar
-    setTimeout(() => {
-      splash.classList.add('oculto');
-    }, 4000);
-  </script>
+  <!-- Scripts -->
+  <script src="/audio.js"></script>
+  <script src="/app.js"></script>
 </body>
 </html>
