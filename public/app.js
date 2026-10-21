@@ -1,28 +1,86 @@
 /**
  * ============================================================================
- * 🛒 MOTOR DA APLICAÇÃO — MEU MERCADO (PWA 2026 v2.2)
+ * 🛒 MOTOR DA APLICAÇÃO — MEU MERCADO (PWA 2026 v2.3)
  * ============================================================================
- * Implementação Completa:
- * - 👨‍👩‍👧 Perfil da Família: Fábio (Administrador) + Adicionar/Gerenciar Membros com Foto
- * - 🛒 Experiência Unificada de Compras:
- *    • Microfone direto no item (fala preço ou quantidade + preço, padrão 1 un)
- *    • Botão lixeira 🗑️ para excluir itens com 1 clique
- *    • Botão 🏁 Finalizar Compras com bip de caixa registradora
- *    • Botão 🔄 Reabrir Lista / Continuar Comprando caso precise adicionar mais itens
- * - 📋 Gerenciador com múltiplas listas (Compras do Mês, Feira, Churrasco...)
- * - 🌙 Modo Noturno e Diurno (☀️ / 🌙)
- * - 🔊 Som Sintetizado Web Audio API
+ * Atualizações de Ponta:
+ * 1. 📝 "Preparar Lista" na tela inicial para a secretária
+ * 2. 🎙️ Ditado Contínuo da Despensa (microfone não fecha enquanto procura produtos)
+ * 3. 🔍 Busca Inteligente no Catálogo de Produtos (limpa pontuação como "?", acha categorias)
+ * 4. 🛒 No Supermercado: Lista com seletor de listas abertas, data da compra, microfone por item, exclusão 🗑️ e reabertura
+ * 5. 👨‍👩‍👧 Perfil da Família com Fábio Administrador
  */
 
 const CONFIG = {
   GAS_WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbyVzn-uiAsqoXOxDGDqeVTTr3pFWPEc6SfqmiTH8j3YTAnr4MPrKRAXtQjbPI7VHp3x9w/exec',
   FINANCEIRO_URL: 'https://meu-financeiro-39138.web.app',
-  STORAGE_PREFIX: 'meu_mercado_v2_2_'
+  STORAGE_PREFIX: 'meu_mercado_v2_3_'
 };
 
 // ============================================================================
-// DICIONÁRIO DE PALAVRAS E NÚMEROS DO DRIVE D
+// CATÁLOGO OFICIAL COMPLETO (BASE DE DADOS DO GOOGLE SHEETS)
 // ============================================================================
+const CATALOGO_BASE = [
+  // MERCEARIA
+  { nome: 'Arroz branco 5 kg', categoria: '🥫 Mercearia', precoMedio: 29.90 },
+  { nome: 'Feijão preto 1 kg', categoria: '🥫 Mercearia', precoMedio: 8.90 },
+  { nome: 'Feijão carioca 1 kg', categoria: '🥫 Mercearia', precoMedio: 8.50 },
+  { nome: 'Óleo de soja 900 ml', categoria: '🥫 Mercearia', precoMedio: 6.90 },
+  { nome: 'Azeite de oliva 500 ml', categoria: '🥫 Mercearia', precoMedio: 36.90 },
+  { nome: 'Extrato de tomate', categoria: '🥫 Mercearia', precoMedio: 4.50 },
+  { nome: 'Molho de tomate', categoria: '🥫 Mercearia', precoMedio: 3.20 },
+  { nome: 'Batata palha', categoria: '🥫 Mercearia', precoMedio: 7.90 },
+  { nome: 'Macarrão espaguete 500 g', categoria: '🥫 Mercearia', precoMedio: 4.80 },
+  { nome: 'Café torrado 500g', categoria: '🥫 Mercearia', precoMedio: 19.90 },
+  { nome: 'Açúcar refinado 1 kg', categoria: '🥫 Mercearia', precoMedio: 4.90 },
+  { nome: 'Sal refinado 1 kg', categoria: '🥫 Mercearia', precoMedio: 2.80 },
+  { nome: 'Farinha de trigo 1 kg', categoria: '🥫 Mercearia', precoMedio: 5.50 },
+  { nome: 'Milho verde lata', categoria: '🥫 Mercearia', precoMedio: 4.20 },
+  { nome: 'Atum em pedaços', categoria: '🥫 Mercearia', precoMedio: 8.90 },
+
+  // LATICÍNIOS & FRIOS
+  { nome: 'Leite integral 1 L', categoria: '🧀 Laticínios', precoMedio: 5.70 },
+  { nome: 'Leite desnatado 1 L', categoria: '🧀 Laticínios', precoMedio: 5.80 },
+  { nome: 'Creme de leite', categoria: '🧀 Laticínios', precoMedio: 3.80 },
+  { nome: 'Leite condensado', categoria: '🧀 Laticínios', precoMedio: 6.50 },
+  { nome: 'Manteiga com sal', categoria: '🧀 Laticínios', precoMedio: 12.90 },
+  { nome: 'Requeijão cremoso', categoria: '🧀 Laticínios', precoMedio: 8.90 },
+  { nome: 'Queijo muçarela (kg)', categoria: '🧀 Laticínios', precoMedio: 45.90 },
+  { nome: 'Iogurte natural', categoria: '🧀 Laticínios', precoMedio: 4.20 },
+
+  // CARNES
+  { nome: 'Carne bovina (kg)', categoria: '🥩 Carnes', precoMedio: 38.90 },
+  { nome: 'Carne moída (kg)', categoria: '🥩 Carnes', precoMedio: 29.90 },
+  { nome: 'Peito de frango (kg)', categoria: '🥩 Carnes', precoMedio: 19.90 },
+  { nome: 'Bife alcatra (kg)', categoria: '🥩 Carnes', precoMedio: 44.90 },
+  { nome: 'Linguiça toscana (kg)', categoria: '🥩 Carnes', precoMedio: 22.90 },
+  { nome: 'Bacon em cubos', categoria: '🥩 Carnes', precoMedio: 14.90 },
+
+  // HORTIFRÚTI
+  { nome: 'Tomate italiano (kg)', categoria: '🥬 Hortifrúti', precoMedio: 8.90 },
+  { nome: 'Cebola (kg)', categoria: '🥬 Hortifrúti', precoMedio: 5.80 },
+  { nome: 'Alho (pct)', categoria: '🥬 Hortifrúti', precoMedio: 6.90 },
+  { nome: 'Batata inglesa (kg)', categoria: '🥬 Hortifrúti', precoMedio: 6.50 },
+  { nome: 'Cenoura (kg)', categoria: '🥬 Hortifrúti', precoMedio: 5.20 },
+  { nome: 'Banana prata (kg)', categoria: '🥬 Hortifrúti', precoMedio: 7.50 },
+  { nome: 'Maçã nacional (kg)', categoria: '🥬 Hortifrúti', precoMedio: 9.80 },
+  { nome: 'Alface americana', categoria: '🥬 Hortifrúti', precoMedio: 4.50 },
+
+  // LIMPEZA
+  { nome: 'Sabão em pó 1.6kg', categoria: '🧼 Limpeza', precoMedio: 19.90 },
+  { nome: 'Detergente líquido', categoria: '🧼 Limpeza', precoMedio: 2.50 },
+  { nome: 'Amaciante de roupas 2L', categoria: '🧼 Limpeza', precoMedio: 16.90 },
+  { nome: 'Desinfetante 1L', categoria: '🧼 Limpeza', precoMedio: 6.90 },
+  { nome: 'Água sanitária 2L', categoria: '🧼 Limpeza', precoMedio: 5.50 },
+  { nome: 'Esponja de aço', categoria: '🧼 Limpeza', precoMedio: 3.20 },
+  { nome: 'Papel toalha', categoria: '🧼 Limpeza', precoMedio: 5.90 },
+
+  // HIGIENE
+  { nome: 'Papel higiênico 12un', categoria: '🧴 Higiene', precoMedio: 22.90 },
+  { nome: 'Sabonete em barra', categoria: '🧴 Higiene', precoMedio: 3.20 },
+  { nome: 'Creme dental', categoria: '🧴 Higiene', precoMedio: 4.90 },
+  { nome: 'Shampoo', categoria: '🧴 Higiene', precoMedio: 16.90 }
+];
+
 const PALAVRAS_NUMEROS = {
   'um': 1, 'uma': 1, 'dois': 2, 'duas': 2, 'tres': 3, 'três': 3,
   'quatro': 4, 'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9,
@@ -38,27 +96,9 @@ const PALAVRAS_NUMEROS = {
 let appState = {
   usuarioAtivoId: 'u_fabio',
   usuariosFamilia: [
-    {
-      id: 'u_fabio',
-      nome: 'Fábio Lucena',
-      papel: 'Administrador 👑',
-      avatar: '👨‍💼',
-      fotoUrl: ''
-    },
-    {
-      id: 'u_esposa',
-      nome: 'Esposa',
-      papel: 'Família',
-      avatar: '👩‍💼',
-      fotoUrl: ''
-    },
-    {
-      id: 'u_secretaria',
-      nome: 'Secretária',
-      papel: 'Compras',
-      avatar: '👩‍🍳',
-      fotoUrl: ''
-    }
+    { id: 'u_fabio', nome: 'Fábio Lucena', papel: 'Administrador 👑', avatar: '👨‍💼', fotoUrl: '' },
+    { id: 'u_secretaria', nome: 'Secretária', papel: 'Preparação da Lista', avatar: '👩‍🍳', fotoUrl: '' },
+    { id: 'u_esposa', nome: 'Esposa', papel: 'Família', avatar: '👩‍💼', fotoUrl: '' }
   ],
   tema: 'claro',
   listaAtivaId: 'lst_1',
@@ -69,43 +109,30 @@ let appState = {
       status: 'ABERTA',
       dataCriacao: new Date().toISOString(),
       orcamentoMeta: 350.00
-    },
-    {
-      id: 'lst_2',
-      nome: 'Feira da Semana',
-      status: 'FECHADA',
-      dataCriacao: new Date(Date.now() - 86400000 * 5).toISOString(),
-      orcamentoMeta: 120.00
     }
   ],
   itens: [
-    { id: 'i1', idLista: 'lst_1', produto: 'Arroz Tipo 1 5kg', categoria: '🥫 Mercearia', quantidade: 1, precoUnitario: 28.50, comprado: true },
-    { id: 'i2', idLista: 'lst_1', produto: 'Feijão Preto 1kg', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 8.90, comprado: true },
-    { id: 'i3', idLista: 'lst_1', produto: 'Leite Integral 1L', categoria: '🧀 Laticínios', quantidade: 6, precoUnitario: 5.70, comprado: false },
-    { id: 'i4', idLista: 'lst_1', produto: 'Café Torrado 500g', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 18.90, comprado: false },
-    { id: 'i5', idLista: 'lst_1', produto: 'Tomate Italiano (kg)', categoria: '🥬 Hortifrúti', quantidade: 1.5, precoUnitario: 8.90, comprado: false },
-    { id: 'i6', idLista: 'lst_1', produto: 'Detergente Líquido', categoria: '🧼 Limpeza', quantidade: 3, precoUnitario: 2.50, comprado: false }
+    { id: 'i1', idLista: 'lst_1', produto: 'Arroz branco 5 kg', categoria: '🥫 Mercearia', quantidade: 1, precoUnitario: 29.90, comprado: true },
+    { id: 'i2', idLista: 'lst_1', produto: 'Feijão preto 1 kg', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 8.90, comprado: true },
+    { id: 'i3', idLista: 'lst_1', produto: 'Leite integral 1 L', categoria: '🧀 Laticínios', quantidade: 6, precoUnitario: 5.70, comprado: false },
+    { id: 'i4', idLista: 'lst_1', produto: 'Café torrado 500g', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 19.90, comprado: false },
+    { id: 'i5', idLista: 'lst_1', produto: 'Tomate italiano (kg)', categoria: '🥬 Hortifrúti', quantidade: 1.5, precoUnitario: 8.90, comprado: false },
+    { id: 'i6', idLista: 'lst_1', produto: 'Detergente líquido', categoria: '🧼 Limpeza', quantidade: 3, precoUnitario: 2.50, comprado: false }
   ],
-  produtosPadrao: [
-    { id: 'p1', nome: 'Arroz Tipo 1 5kg', categoria: '🥫 Mercearia', precoMedio: 28.50 },
-    { id: 'p2', nome: 'Feijão Preto 1kg', categoria: '🥫 Mercearia', precoMedio: 8.90 },
-    { id: 'p3', nome: 'Leite Integral 1L', categoria: '🧀 Laticínios', precoMedio: 5.70 },
-    { id: 'p4', nome: 'Café Torrado 500g', categoria: '🥫 Mercearia', precoMedio: 18.90 },
-    { id: 'p5', nome: 'Açúcar Refinado 1kg', categoria: '🥫 Mercearia', precoMedio: 4.80 },
-    { id: 'p6', nome: 'Banana Prata (kg)', categoria: '🥬 Hortifrúti', precoMedio: 7.50 },
-    { id: 'p7', nome: 'Tomate Italiano (kg)', categoria: '🥬 Hortifrúti', precoMedio: 8.90 },
-    { id: 'p8', nome: 'Peito de Frango (kg)', categoria: '🥩 Carnes', precoMedio: 19.90 },
-    { id: 'p9', nome: 'Detergente Líquido', categoria: '🧼 Limpeza', precoMedio: 2.50 },
-    { id: 'p10', nome: 'Papel Higiênico 12un', categoria: '🧴 Higiene', precoMedio: 22.90 }
-  ],
+  produtosCatalogo: CATALOGO_BASE,
   historico: [],
   corredorAtivo: 'todos',
   itemSendoEditado: null,
   valorTecladoBuffer: '0'
 };
 
+// Variáveis do Ditado Contínuo da Despensa
+let ditandoContinuo = false;
+let reconhecimentoContinuo = null;
+let itensDitadosBuffer = [];
+
 // ============================================================================
-// PERSISTÊNCIA
+// PERSISTÊNCIA & INICIALIZAÇÃO
 // ============================================================================
 function salvarLocal() {
   try {
@@ -127,9 +154,6 @@ function carregarLocal() {
   }
 }
 
-// ============================================================================
-// TEMA NOTURNO / DIURNO
-// ============================================================================
 window.alternarTema = function() {
   if (appState.tema === 'escuro') {
     appState.tema = 'claro';
@@ -158,6 +182,11 @@ function aplicarTema() {
 // NAVEGAÇÃO
 // ============================================================================
 window.abrirTela = function(idTela, botaoNav) {
+  // Se sair da tela de preparar lista, para o ditado se estiver rodando
+  if (idTela !== 'telaPrepararLista' && ditandoContinuo) {
+    pararDitadoContinuo();
+  }
+
   document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
   const telaAlvo = document.getElementById(idTela);
   if (telaAlvo) {
@@ -206,7 +235,8 @@ function calcularTotais(idLista = appState.listaAtivaId) {
     meta,
     percMeta,
     nomeLista: lista?.nome || 'Minha Lista',
-    statusLista: lista?.status || 'ABERTA'
+    statusLista: lista?.status || 'ABERTA',
+    dataCriacao: lista?.dataCriacao || new Date().toISOString()
   };
 }
 
@@ -267,30 +297,297 @@ function renderizarTelaInicio() {
   const containerSugestoes = document.getElementById('chipsSugestoes');
   if (containerSugestoes) {
     const nomesNaLista = appState.itens.filter(i => i.idLista === appState.listaAtivaId).map(i => i.produto.toLowerCase());
-    const sugestoes = appState.produtosPadrao.filter(p => !nomesNaLista.includes(p.nome.toLowerCase())).slice(0, 6);
+    const sugestoes = appState.produtosCatalogo.filter(p => !nomesNaLista.includes(p.nome.toLowerCase())).slice(0, 6);
 
     containerSugestoes.innerHTML = sugestoes.map(p => `
-      <div class="chip-sugestao" onclick="adicionarProdutoRapido('${p.id}')">
+      <div class="chip-sugestao" onclick="adicionarProdutoDoCatalogo('${p.nome}')">
         <span>+</span> ${p.nome}
       </div>
     `).join('');
   }
 }
 
-// Renderiza a lista de compras principal com todas as funcionalidades integradas
+// ============================================================================
+// 📝 PREPARAR LISTA — MODO DITADO CONTÍNUO DA DESPENSA (PARA SECRETÁRIA)
+// ============================================================================
+window.abrirPrepararLista = function() {
+  itensDitadosBuffer = [];
+  atualizarTagsDitadasUI();
+  const dataHoje = new Date();
+  const nomePadrao = `Compras ${dataHoje.getDate().toString().padStart(2, '0')}/${(dataHoje.getMonth() + 1).toString().padStart(2, '0')}`;
+  const inputNome = document.getElementById('nomeListaPreparacao');
+  if (inputNome) inputNome.value = nomePadrao;
+
+  abrirTela('telaPrepararLista', null);
+};
+
+window.alternarDitadoContinuoDespensa = function() {
+  if (ditandoContinuo) {
+    pararDitadoContinuo();
+  } else {
+    iniciarDitadoContinuo();
+  }
+};
+
+function iniciarDitadoContinuo() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Comando de voz contínuo não suportado neste navegador. Use o Chrome no celular.');
+    return;
+  }
+
+  reconhecimentoContinuo = new SpeechRecognition();
+  reconhecimentoContinuo.lang = 'pt-BR';
+  reconhecimentoContinuo.continuous = true;
+  reconhecimentoContinuo.interimResults = false;
+
+  ditandoContinuo = true;
+  const btn = document.getElementById('btnDitadoContinuo');
+  const statusBox = document.getElementById('statusDitadoDespensa');
+
+  if (btn) {
+    btn.classList.add('ouvindo');
+    btn.textContent = '⏹️';
+  }
+  if (statusBox) {
+    statusBox.textContent = '🔴 Microfone Aberto! Fale os produtos com calma. Pode ir na despensa e falar no seu ritmo...';
+    statusBox.style.color = '#ef4444';
+  }
+
+  window.SomMercado.bipItem();
+
+  reconhecimentoContinuo.onresult = function(event) {
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      if (event.results[i].isFinal) {
+        let fala = event.results[i][0].transcript;
+        console.log('🎙️ Fala capturada na despensa:', fala);
+        adicionarItensAoBuffer(fala);
+      }
+    }
+  };
+
+  reconhecimentoContinuo.onerror = function(event) {
+    console.log('Aviso no reconhecimento contínuo:', event.error);
+  };
+
+  // Se o navegador parar por silêncio enquanto a secretária procura itens, reinicia imediatamente!
+  reconhecimentoContinuo.onend = function() {
+    if (ditandoContinuo) {
+      try {
+        reconhecimentoContinuo.start();
+      } catch (e) {}
+    }
+  };
+
+  try {
+    reconhecimentoContinuo.start();
+  } catch (err) {
+    console.warn('Erro ao ligar mic:', err);
+  }
+}
+
+function pararDitadoContinuo() {
+  ditandoContinuo = false;
+  if (reconhecimentoContinuo) {
+    try {
+      reconhecimentoContinuo.stop();
+    } catch (e) {}
+  }
+  const btn = document.getElementById('btnDitadoContinuo');
+  const statusBox = document.getElementById('statusDitadoDespensa');
+
+  if (btn) {
+    btn.classList.remove('ouvindo');
+    btn.textContent = '🎙️';
+  }
+  if (statusBox) {
+    statusBox.textContent = 'Microfone pausado. Clique no microfone para continuar falando ou em "Gerar Lista" abaixo.';
+    statusBox.style.color = 'var(--texto-principal)';
+  }
+}
+
+// Quebra a fala por vírgulas, "e", "mais", limpa pontuação e busca no catálogo
+function adicionarItensAoBuffer(fala) {
+  let limpa = fala.replace(/[.?!]/g, ' ').toLowerCase().trim();
+  let pedacos = limpa.split(/[,;\n]|\s+e\s+|\s+mais\s+/i).map(p => p.trim()).filter(p => p.length > 0);
+
+  pedacos.forEach(p => {
+    // Normaliza termo e busca produto correspondente
+    const info = extrairProdutoEQuantidade(p);
+    itensDitadosBuffer.push(info);
+    window.SomMercado.bipItem();
+  });
+
+  atualizarTagsDitadasUI();
+}
+
+function extrairProdutoEQuantidade(texto) {
+  let termo = texto.trim();
+  let qtd = 1;
+
+  // Extrai quantidade se falada (ex: "3 óleos", "2 cremes de leite", "duas caixas de leite")
+  const matchNum = termo.match(/^(\d+)\s*(?:unidades?|un|caixas?|pacotes?|latas?|kg|litros?)?\s*(?:de\s+)?(.*)$/i);
+  if (matchNum) {
+    qtd = Number(matchNum[1]) || 1;
+    termo = matchNum[2].trim();
+  } else {
+    // Verifica por extenso inicial (ex: "dois cremes de leite")
+    for (const pal in PALAVRAS_NUMEROS) {
+      const reg = new RegExp('^' + pal + '\\s*(?:de\\s+)?(.*)$', 'i');
+      const mExt = termo.match(reg);
+      if (mExt) {
+        qtd = PALAVRAS_NUMEROS[pal];
+        termo = mExt[1].trim();
+        break;
+      }
+    }
+  }
+
+  // Busca na base de dados de produtos
+  const achado = buscarNoCatalogo(termo);
+
+  return {
+    nome: achado.nome,
+    categoria: achado.categoria,
+    quantidade: qtd,
+    precoUnitario: achado.precoMedio || 0
+  };
+}
+
+// Busca inteligente no catálogo ignorando acentos e pontuações
+function buscarNoCatalogo(termo) {
+  const limpo = termo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+  // 1. Procura match exato ou substring no catálogo oficial
+  for (const prod of appState.produtosCatalogo) {
+    const prodLimpo = prod.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (prodLimpo.includes(limpo) || limpo.includes(prodLimpo)) {
+      return prod;
+    }
+  }
+
+  // 2. Se não encontrou, deduz categoria provável
+  let cat = '📦 Outros';
+  if (/leite|queijo|iogurte|manteiga|requeijao|creme/i.test(limpo)) cat = '🧀 Laticínios';
+  else if (/carne|frango|bife|peito|linguica|bacon/i.test(limpo)) cat = '🥩 Carnes';
+  else if (/tomate|cebola|alho|batata|fruta|banana|maca|alface/i.test(limpo)) cat = '🥬 Hortifrúti';
+  else if (/arroz|feijao|oleo|azeite|molho|cafe|acucar|sal|farinha/i.test(limpo)) cat = '🥫 Mercearia';
+  else if (/sabao|detergente|amaciante|desinfetante|esponja|limpeza/i.test(limpo)) cat = '🧼 Limpeza';
+  else if (/papel|sabonete|shampoo|pasta|escova/i.test(limpo)) cat = '🧴 Higiene';
+
+  const nomeFormatado = termo.charAt(0).toUpperCase() + termo.slice(1);
+  return { nome: nomeFormatado, categoria: cat, precoMedio: 0 };
+}
+
+function atualizarTagsDitadasUI() {
+  const container = document.getElementById('containerTagsDitadas');
+  const contador = document.getElementById('contadorItensDitados');
+  if (contador) contador.textContent = `${itensDitadosBuffer.length} produtos anotados`;
+
+  if (!container) return;
+  if (itensDitadosBuffer.length === 0) {
+    container.innerHTML = '<span style="color: var(--texto-suave); font-size: 13px; font-style: italic;">Nenhum produto falado ainda. Ative o microfone acima e diga o que falta na despensa...</span>';
+    return;
+  }
+
+  container.innerHTML = itensDitadosBuffer.map((item, idx) => `
+    <div class="tag-item-ditado">
+      <span>${item.nome} (${item.quantidade}x)</span>
+      <span class="btn-remover-tag" onclick="removerTagDitada(${idx})">✕</span>
+    </div>
+  `).join('');
+}
+
+window.removerTagDitada = function(idx) {
+  itensDitadosBuffer.splice(idx, 1);
+  atualizarTagsDitadasUI();
+};
+
+window.adicionarItemDigitadoManual = function(e) {
+  if (e && e.key && e.key !== 'Enter') return;
+  const input = document.getElementById('inputItemManualDespensa');
+  const texto = input?.value.trim();
+  if (!texto) return;
+
+  adicionarItensAoBuffer(texto);
+  input.value = '';
+};
+
+// Converte os itens ditados na despensa em uma Lista de Compras definitiva
+window.concluirPreparacaoLista = function() {
+  pararDitadoContinuo();
+
+  if (itensDitadosBuffer.length === 0) {
+    alert('A secretária ainda não ditou nenhum produto. Fale os produtos ou digite antes de gerar a lista.');
+    return;
+  }
+
+  const inputNome = document.getElementById('nomeListaPreparacao');
+  const nome = inputNome?.value.trim() || `Compras ${new Date().toLocaleDateString('pt-BR')}`;
+
+  const novaListaId = 'lst_' + Date.now();
+  const novaLista = {
+    id: novaListaId,
+    nome: nome,
+    status: 'ABERTA',
+    dataCriacao: new Date().toISOString(),
+    orcamentoMeta: 350.00
+  };
+
+  appState.listas.unshift(novaLista);
+  appState.listaAtivaId = novaListaId;
+
+  // Transfere todos os produtos da despensa para a lista
+  itensDitadosBuffer.forEach((item, i) => {
+    appState.itens.push({
+      id: 'i_' + Date.now() + '_' + i,
+      idLista: novaListaId,
+      produto: item.nome,
+      categoria: item.categoria,
+      quantidade: item.quantidade || 1,
+      precoUnitario: item.precoUnitario || 0,
+      comprado: false
+    });
+  });
+
+  itensDitadosBuffer = [];
+  window.SomMercado.bipItem();
+  salvarLocal();
+
+  alert(`✅ Lista "${novaLista.nome}" gerada com sucesso!\nForam incluídos ${novaLista.orcamentoMeta ? novaLista.nome : ''} com todos os ${appState.itens.filter(it => it.idLista === novaListaId).length} itens prontos para o Fábio comprar no mercado.`);
+
+  // Abre a lista em Compras pronta para o supermercado!
+  abrirTela('telaCompras', document.getElementById('navCompras'));
+};
+
+// ============================================================================
+// 🛒 TELA COMPRAS (SUPERMERCADO COM SELETOR DE LISTAS E DATA)
+// ============================================================================
 function renderizarTelaCompras() {
   const container = document.getElementById('listaItensCompras');
-  const tituloLista = document.getElementById('tituloListaAtiva');
+  const seletorListas = document.getElementById('seletorListaAtiva');
+  const dataDisplay = document.getElementById('dataListaAtiva');
   const bannerFechada = document.getElementById('bannerListaFechada');
   const barraRodape = document.getElementById('barraFinalizarCompras');
 
   const totais = calcularTotais();
 
-  if (tituloLista) {
-    tituloLista.textContent = totais.nomeLista;
+  // 1. Seletor de Listas (permite Fábio alternar entre listas abertas)
+  if (seletorListas) {
+    seletorListas.innerHTML = appState.listas.map(l => `
+      <option value="${l.id}" ${l.id === appState.listaAtivaId ? 'selected' : ''}>
+        ${l.nome} (${l.status})
+      </option>
+    `).join('');
   }
 
-  // Se a lista estiver fechada, exibe banner para reativar/continuar comprando
+  // 2. Data de criação da lista formatada
+  if (dataDisplay) {
+    const dataObj = new Date(totais.dataCriacao);
+    dataDisplay.textContent = `📅 Criada em ${dataObj.toLocaleDateString('pt-BR')} às ${dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  }
+
+  // 3. Se a lista estiver fechada, exibe banner para reativar/continuar comprando
   if (totais.statusLista === 'FECHADA') {
     if (bannerFechada) bannerFechada.style.display = 'flex';
     if (barraRodape) barraRodape.style.display = 'none';
@@ -319,87 +616,50 @@ function renderizarTelaCompras() {
 
   container.innerHTML = itens.map(item => `
     <div class="item-card ${item.comprado ? 'comprado' : ''}" id="card_${item.id}">
-      <!-- Checkbox de pegar no carrinho -->
       <div class="item-checkbox" onclick="alternarItem('${item.id}')">
         ${item.comprado ? '✓' : ''}
       </div>
 
-      <!-- Nome e Categoria -->
       <div class="item-info" onclick="alternarItem('${item.id}')">
         <div class="item-nome">${item.produto}</div>
         <div class="item-categoria">${item.categoria}</div>
       </div>
 
-      <!-- Microfone do item: falar preço ou quantidade + preço -->
-      <button class="btn-mic-item" id="mic_${item.id}" onclick="ouvirPrecoDoItem('${item.id}', this)" title="Falar preço deste item (Ex: '5,70' ou '3 por 10 reais')">
+      <!-- Microfone do item no corredor: "Leite, quatro unidades, 5,70 cada" -->
+      <button class="btn-mic-item" id="mic_${item.id}" onclick="ouvirVozItemSupermercado('${item.id}', this)" title="Falar quantidade e preço (Ex: 'quatro unidades, 5,70 cada')">
         🎙️
       </button>
 
-      <!-- Controle de quantidade -->
       <div class="item-qtd-controle">
         <button class="btn-qtd" onclick="alterarQuantidade('${item.id}', -1)">-</button>
         <span class="qtd-valor">${item.quantidade}</span>
         <button class="btn-qtd" onclick="alterarQuantidade('${item.id}', 1)">+</button>
       </div>
 
-      <!-- Preço unitário com clique para maquininha -->
       <div class="item-preco-tag ${item.precoUnitario > 0 ? 'com-preco' : ''}" onclick="abrirTecladoPreco('${item.id}')">
         ${item.precoUnitario > 0 ? formatarMoeda(item.precoUnitario * item.quantidade) : 'R$ Preço'}
       </div>
 
-      <!-- Botão de Excluir / Cancelar o item da lista -->
-      <button class="btn-excluir-item" onclick="excluirItem('${item.id}')" title="Excluir este item da lista">
+      <button class="btn-excluir-item" onclick="excluirItem('${item.id}')" title="Excluir produto da lista">
         🗑️
       </button>
     </div>
   `).join('');
 }
 
-// Renderiza a tela de gerenciamento de listas
-function renderizarTelaListas() {
-  const container = document.getElementById('containerListas');
-  if (!container) return;
-
-  container.innerHTML = appState.listas.map(lista => {
-    const t = calcularTotais(lista.id);
-    const estaAtiva = lista.id === appState.listaAtivaId;
-
-    return `
-      <div class="item-card" style="margin-bottom: 12px; ${estaAtiva ? 'border: 2px solid var(--cor-azul);' : ''}">
-        <div style="font-size: 32px; cursor: pointer;" onclick="selecionarLista('${lista.id}')">📋</div>
-        
-        <div class="item-info" onclick="selecionarLista('${lista.id}')">
-          <div class="item-nome" style="font-size: 16px;">
-            ${lista.nome} ${estaAtiva ? '<span style="font-size: 11px; color: var(--cor-azul); background: var(--cor-azul-light); padding: 2px 8px; border-radius: 10px;">ATIVA</span>' : ''}
-          </div>
-          <div class="item-categoria">
-            Status: <strong style="color: ${lista.status === 'ABERTA' ? 'var(--cor-marca)' : 'var(--texto-suave)'}">${lista.status}</strong> • ${t.itensComprados}/${t.totalItens} no carrinho
-          </div>
-        </div>
-
-        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
-          <div style="font-size: 15px; font-weight: 800; color: var(--cor-marca);">${formatarMoeda(t.totalCarrinho)}</div>
-          <div style="display: flex; gap: 4px;">
-            <button class="btn-qtd" style="width: auto; padding: 4px 10px; font-size: 11px; background: var(--cor-azul); color: #fff;" onclick="selecionarLista('${lista.id}')">
-              Abrir
-            </button>
-            <button class="btn-excluir-item" onclick="excluirLista('${lista.id}')" title="Excluir lista">
-              🗑️
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-}
+window.trocarListaComprasDropdown = function(idLista) {
+  appState.listaAtivaId = idLista;
+  window.SomMercado.bipItem();
+  renderizarTudo();
+};
 
 // ============================================================================
-// MICROFONE NO ITEM (PARSER COMPLETO DO DRIVE D)
+// MICROFONE NO ITEM (PARSER ROBUSTO: "LEITE, 4 UNIDADES, 5,70 CADA")
 // ============================================================================
-window.ouvirPrecoDoItem = function(idItem, botao) {
+window.ouvirVozItemSupermercado = function(idItem, botao) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
-    alert('Comando de voz não suportado neste navegador. Utilize o Chrome no celular.');
+    alert('Comando de voz não suportado neste navegador.');
     return;
   }
 
@@ -415,22 +675,20 @@ window.ouvirPrecoDoItem = function(idItem, botao) {
 
   recognition.onresult = function(event) {
     const fala = event.results[0][0].transcript;
-    console.log(`🎙️ Voz para o item "${item.produto}":`, fala);
+    console.log(`🎙️ Voz do item "${item.produto}":`, fala);
 
-    const resultado = interpretarVozItem(fala);
-    if (resultado.preco > 0) {
-      item.precoUnitario = resultado.preco;
-      // Se informou quantidade explícita (ex: "3 caixas a 5,70"), atualiza quantidade; se não, mantém ou define como 1
-      if (resultado.quantidade !== null && resultado.quantidade > 0) {
-        item.quantidade = resultado.quantidade;
-      } else if (!item.quantidade) {
-        item.quantidade = 1;
+    const dados = interpretarFalaItemNoMercado(fala);
+
+    if (dados.preco > 0) {
+      item.precoUnitario = dados.preco;
+      if (dados.quantidade !== null && dados.quantidade > 0) {
+        item.quantidade = dados.quantidade;
       }
       item.comprado = true; // Já marca como pego no carrinho!
       window.SomMercado.bipItem();
       renderizarTudo();
     } else {
-      alert(`Não identifiquei o valor em "${fala}". Fale algo como "5,70", "cinco e setenta" ou "3 a 8,90".`);
+      alert(`Não entendi o preço em "${fala}". Tente dizer algo como "5,70" ou "quatro unidades, 5,70 cada".`);
     }
   };
 
@@ -446,63 +704,74 @@ window.ouvirPrecoDoItem = function(idItem, botao) {
 };
 
 /**
- * Interpreta fala no item:
- * - "5,70" -> preco: 5.70, qtd: null (padrão 1)
- * - "cinco e setenta" -> preco: 5.70, qtd: null
- * - "3 a 5,70" -> qtd: 3, preco: 5.70
- * - "2 por 15 reais" -> qtd: 2, preco: 7.50
- * - "dez reais" -> preco: 10.00, qtd: null
+ * Entende com precisão:
+ * - "Leite, quatro unidades, 5,70 cada" -> qtd: 4, preco: 5.70
+ * - "4 unidades a 5,70" -> qtd: 4, preco: 5.70
+ * - "5,70 cada" -> qtd: 1, preco: 5.70
+ * - "cinco e setenta" -> qtd: 1, preco: 5.70
+ * - "dois por 15 reais" -> qtd: 2, preco: 7.50
  */
-function interpretarVozItem(texto) {
-  let frase = String(texto || '').toLowerCase().replace(/[.!?]/g, ' ').trim();
+function interpretarFalaItemNoMercado(texto) {
+  let frase = String(texto || '').replace(/[.?!]/g, ' ').toLowerCase().trim();
 
-  let quantidade = null;
+  let quantidade = 1;
   let preco = 0;
 
-  // 1. Verifica padrão de quantidade e preço: "3 a 5,70" ou "3 por 10" ou "2 caixas 5,70"
-  const regexQtdEPreco = /\b(\d+)\s*(?:unidades?|un|caixas?|pacotes?|latas?|kg|quilos?)?\s*(?:a|por|de)?\s*(\d+(?:[,\.]\d{1,2})?)\s*(?:reais?)?(?:\s*cada)?\b/i;
-  const matchQtd = frase.match(regexQtdEPreco);
-
+  // 1. Quantidade explícita numérica ou por extenso
+  const regexQtd = /\b(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez|doze)\s*(?:unidades?|un|caixas?|pct|pacotes?|latas?|kg)?\b/i;
+  const matchQtd = frase.match(regexQtd);
   if (matchQtd) {
-    quantidade = Number(matchQtd[1]);
-    let valor = Number(matchQtd[2].replace(',', '.'));
-    // Se falou "por 15 no total", divide
-    if (/no total|ao todo/i.test(frase) && quantidade > 1) {
-      preco = valor / quantidade;
+    let qStr = matchQtd[1].toLowerCase();
+    if (PALAVRAS_NUMEROS[qStr] !== undefined) {
+      quantidade = PALAVRAS_NUMEROS[qStr];
     } else {
-      preco = valor;
+      quantidade = Number(qStr) || 1;
     }
-    return { quantidade, preco };
   }
 
-  // 2. Verifica preço numérico simples: "5,70" ou "5.70" ou "12 reais"
-  const regexNum = /(\d{1,4})[,\.]?(\d{0,2})?\s*(?:reais?|real)?/i;
-  const matchNum = frase.match(regexNum);
-  if (matchNum) {
-    const inteiros = matchNum[1];
-    let centavos = matchNum[2] || '0';
-    if (centavos.length === 1) centavos += '0';
-    preco = parseFloat(`${inteiros}.${centavos}`);
-    return { quantidade: 1, preco };
-  }
-
-  // 3. Verifica número por extenso básico ("cinco e setenta", "oito e noventa")
-  const partes = frase.split(/\s+e\s+|\s+/);
-  if (partes.length >= 1 && PALAVRAS_NUMEROS[partes[0]] !== undefined) {
-    const p1 = PALAVRAS_NUMEROS[partes[0]];
-    let centavos = 0;
-    if (partes.length >= 2 && PALAVRAS_NUMEROS[partes[1]] !== undefined) {
-      centavos = PALAVRAS_NUMEROS[partes[1]];
+  // 2. Preço com formato "5,70" ou "5.70" ou "5 reais"
+  const regexPreco = /\b(\d{1,4})[,\.]?(\d{0,2})?\s*(?:reais?|real)?(?:\s*cada)?\b/i;
+  // Procura preço no final da frase ou após a quantidade
+  const matches = [...frase.matchAll(/\b(\d{1,4})(?:[,\.](\d{1,2}))?\b/g)];
+  if (matches.length > 0) {
+    // O preço geralmente é o último número na frase se a quantidade for o primeiro
+    const last = matches[matches.length - 1];
+    if (matches.length > 1 || last[2] !== undefined) {
+      const intPart = last[1];
+      let decPart = last[2] || '0';
+      if (decPart.length === 1) decPart += '0';
+      preco = parseFloat(`${intPart}.${decPart}`);
+    } else {
+      preco = parseFloat(last[1]);
     }
-    preco = p1 + (centavos / 100);
-    return { quantidade: 1, preco };
   }
 
-  return { quantidade: 1, preco: 0 };
+  // 3. Fallback para extenso ("cinco e setenta")
+  if (preco === 0) {
+    const partes = frase.split(/\s+e\s+|\s+/);
+    for (let i = 0; i < partes.length; i++) {
+      if (PALAVRAS_NUMEROS[partes[i]] !== undefined) {
+        let p1 = PALAVRAS_NUMEROS[partes[i]];
+        let p2 = 0;
+        if (i + 1 < partes.length && PALAVRAS_NUMEROS[partes[i + 1]] !== undefined) {
+          p2 = PALAVRAS_NUMEROS[partes[i + 1]];
+        }
+        preco = p1 + (p2 / 100);
+        break;
+      }
+    }
+  }
+
+  // Se falou "dois por 15 reais no total", calcula unitário
+  if (/no total|ao todo/i.test(frase) && quantidade > 1) {
+    preco = preco / quantidade;
+  }
+
+  return { quantidade, preco };
 }
 
 // ============================================================================
-// MICROFONE GERAL DO TOPO (ADICIONAR PRODUTO EXTRA)
+// MICROFONE GERAL DO TOPO (ADICIONAR PRODUTO CONSULTANDO CATÁLOGO)
 // ============================================================================
 window.iniciarVozGeral = function() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -521,7 +790,7 @@ window.iniciarVozGeral = function() {
 
   recognition.onresult = function(event) {
     const fala = event.results[0][0].transcript;
-    processarAdicaoVoz(fala);
+    processarAdicaoVozAoMercado(fala);
   };
 
   recognition.onend = function() {
@@ -531,56 +800,61 @@ window.iniciarVozGeral = function() {
   recognition.start();
 };
 
-function processarAdicaoVoz(frase) {
-  let limpo = frase.toLowerCase().replace(/^(adicionar|coloque|comprar|colocar)\s+/i, '').trim();
+function processarAdicaoVozAoMercado(frase) {
+  // Limpa interrogações, pontos e comandos
+  let limpa = frase.replace(/[.?!]/g, '').replace(/^(adicionar|coloque|comprar|colocar)\s+/i, '').trim();
 
-  // Verifica se falou preço no final: "leite integral 5,70 cada"
-  const regex = /^(.*?)(?:por\s+|\s+)(\d+(?:[,\.]\d{1,2})?)\s*(?:reais|real)?(?:\s*cada)?$/i;
-  const match = limpo.match(regex);
-
-  let nome = limpo;
-  let preco = 0;
-
-  if (match && match[1].trim().length > 1) {
-    nome = match[1].trim();
-    preco = parseFloat(match[2].replace(',', '.')) || 0;
-  }
-
-  nome = nome.charAt(0).toUpperCase() + nome.slice(1);
+  const dados = extrairProdutoEQuantidade(limpa);
 
   appState.itens.push({
     id: 'item_' + Date.now(),
     idLista: appState.listaAtivaId,
-    produto: nome,
-    categoria: '📦 Outros',
-    quantidade: 1,
-    precoUnitario: preco,
-    comprado: preco > 0
+    produto: dados.nome,
+    categoria: dados.categoria,
+    quantidade: dados.quantidade || 1,
+    precoUnitario: dados.precoUnitario || 0,
+    comprado: false
   });
 
   window.SomMercado.bipItem();
   renderizarTudo();
-  alert(`🎙️ Produto adicionado à lista:\n${nome}${preco > 0 ? ' • R$ ' + preco.toFixed(2) : ''}`);
+  alert(`🎙️ Adicionado à lista:\n${dados.nome} (${dados.quantidade}x) • ${dados.categoria}`);
 }
 
-// Adicionar produto digitando no campo rápido
 window.adicionarProdutoManual = function(e) {
   if (e && e.key && e.key !== 'Enter') return;
   const input = document.getElementById('inputAdicionarManual');
   const nome = input?.value.trim();
   if (!nome) return;
 
+  const dados = extrairProdutoEQuantidade(nome);
+
   appState.itens.push({
     id: 'item_' + Date.now(),
     idLista: appState.listaAtivaId,
-    produto: nome,
-    categoria: '📦 Outros',
+    produto: dados.nome,
+    categoria: dados.categoria,
     quantidade: 1,
-    precoUnitario: 0,
+    precoUnitario: dados.precoUnitario || 0,
     comprado: false
   });
 
   input.value = '';
+  window.SomMercado.bipItem();
+  renderizarTudo();
+};
+
+window.adicionarProdutoDoCatalogo = function(nome) {
+  const dados = buscarNoCatalogo(nome);
+  appState.itens.push({
+    id: 'item_' + Date.now(),
+    idLista: appState.listaAtivaId,
+    produto: dados.nome,
+    categoria: dados.categoria,
+    quantidade: 1,
+    precoUnitario: dados.precoMedio || 0,
+    comprado: false
+  });
   window.SomMercado.bipItem();
   renderizarTudo();
 };
@@ -630,31 +904,48 @@ window.filtrarCorredor = function(corredor, botao) {
   renderizarTelaCompras();
 };
 
-window.adicionarProdutoRapido = function(idProduto) {
-  const p = appState.produtosPadrao.find(prod => prod.id === idProduto);
-  if (!p) return;
-
-  const existente = appState.itens.find(i => i.idLista === appState.listaAtivaId && i.produto.toLowerCase() === p.nome.toLowerCase());
-  if (existente) {
-    existente.quantidade += 1;
-  } else {
-    appState.itens.push({
-      id: 'item_' + Date.now(),
-      idLista: appState.listaAtivaId,
-      produto: p.nome,
-      categoria: p.categoria,
-      quantidade: 1,
-      precoUnitario: p.precoMedio || 0,
-      comprado: false
-    });
-  }
-  window.SomMercado.bipItem();
-  renderizarTudo();
-};
-
 // ============================================================================
 // GESTÃO DE LISTAS (SELECIONAR, CRIAR, EXCLUIR, REABRIR)
 // ============================================================================
+function renderizarTelaListas() {
+  const container = document.getElementById('containerListas');
+  if (!container) return;
+
+  container.innerHTML = appState.listas.map(lista => {
+    const t = calcularTotais(lista.id);
+    const estaAtiva = lista.id === appState.listaAtivaId;
+    const dataObj = new Date(lista.dataCriacao);
+
+    return `
+      <div class="item-card" style="margin-bottom: 12px; ${estaAtiva ? 'border: 2px solid var(--cor-azul);' : ''}">
+        <div style="font-size: 32px; cursor: pointer;" onclick="selecionarLista('${lista.id}')">📋</div>
+        
+        <div class="item-info" onclick="selecionarLista('${lista.id}')">
+          <div class="item-nome" style="font-size: 16px;">
+            ${lista.nome} ${estaAtiva ? '<span style="font-size: 11px; color: var(--cor-azul); background: var(--cor-azul-light); padding: 2px 8px; border-radius: 10px;">ATIVA</span>' : ''}
+          </div>
+          <div class="item-categoria">
+            Status: <strong style="color: ${lista.status === 'ABERTA' ? 'var(--cor-marca)' : 'var(--texto-suave)'}">${lista.status}</strong> • ${t.itensComprados}/${t.totalItens} no carrinho
+          </div>
+          <small style="color: var(--texto-suave); font-size: 11px;">📅 ${dataObj.toLocaleDateString('pt-BR')} às ${dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small>
+        </div>
+
+        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 6px;">
+          <div style="font-size: 15px; font-weight: 800; color: var(--cor-marca);">${formatarMoeda(t.totalCarrinho)}</div>
+          <div style="display: flex; gap: 4px;">
+            <button class="btn-qtd" style="width: auto; padding: 4px 10px; font-size: 11px; background: var(--cor-azul); color: #fff;" onclick="selecionarLista('${lista.id}')">
+              Abrir
+            </button>
+            <button class="btn-excluir-item" onclick="excluirLista('${lista.id}')" title="Excluir lista">
+              🗑️
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
 window.selecionarLista = function(idLista) {
   appState.listaAtivaId = idLista;
   window.SomMercado.bipItem();
@@ -711,7 +1002,6 @@ window.excluirLista = function(idLista) {
   }
 };
 
-// 🔄 Reabrir lista fechada para acrescentar mais itens
 window.reabrirListaAtual = function() {
   const lista = appState.listas.find(l => l.id === appState.listaAtivaId);
   if (!lista) return;
@@ -720,11 +1010,11 @@ window.reabrirListaAtual = function() {
   lista.dataFechamento = null;
   window.SomMercado.bipItem();
   renderizarTudo();
-  alert(`🔄 A lista "${lista.nome}" foi reaberta!\nVocê pode adicionar mais itens normalmente e finalizar quando terminar.`);
+  alert(`🔄 A lista "${lista.nome}" foi reaberta!\nVocê pode adicionar novos produtos e finalizar quando terminar.`);
 };
 
 // ============================================================================
-// FINALIZAR COMPRAS (RECIBO + BIP TRIUNFAL)
+// FINALIZAR COMPRAS (RECIBO + BIP)
 // ============================================================================
 let formaPagamentoEscolhida = '💳 Crédito';
 
@@ -755,7 +1045,6 @@ window.confirmarFinalizarCompraDefinitivo = function() {
   const lista = appState.listas.find(l => l.id === appState.listaAtivaId);
   const usuario = appState.usuariosFamilia.find(u => u.id === appState.usuarioAtivoId) || appState.usuariosFamilia[0];
 
-  // 🔔 Toca o sinal sonoro de caixa registradora / sucesso
   window.SomMercado.bipFinalizarCompra();
 
   const compra = {
@@ -778,11 +1067,11 @@ window.confirmarFinalizarCompraDefinitivo = function() {
   fecharModalFinalizar();
   renderizarTudo();
 
-  alert(`🎉 Compras finalizadas com sucesso!\n\nResponsável: ${compra.responsavel}\nTotal: ${formatarMoeda(compra.total)}\nPagamento: ${compra.formaPagamento}\n\n💡 Dica: Se precisar comprar mais algo, basta clicar em "🔄 Reabrir Lista" no topo!`);
+  alert(`🎉 Compras finalizadas com sucesso!\n\nResponsável: ${compra.responsavel}\nTotal: ${formatarMoeda(compra.total)}\nPagamento: ${compra.formaPagamento}\n\n💡 Dica: Se comprou algo a mais no caixa, basta tocar em "🔄 Reabrir Lista" no topo!`);
 };
 
 // ============================================================================
-// PERFIL DA FAMÍLIA (ADMINISTRADOR FÁBIO + ADICIONAR MEMBROS)
+// PERFIL DA FAMÍLIA (ADMINISTRADOR FÁBIO)
 // ============================================================================
 window.abrirModalPerfil = function() {
   renderizarListaUsuariosFamilia();

@@ -73,22 +73,34 @@
     <main class="conteudo-telas">
 
       <!-- ==============================================================
-           1. TELA INÍCIO
+           1. TELA INÍCIO: CARDS INTUITIVOS (PREPARAR LISTA / FAZER COMPRAS)
       =============================================================== -->
       <section id="telaInicio" class="tela ativa">
         <div class="saudacao">
-          <span class="saudacao-ola">Tudo pronto para as compras! 🛒</span>
+          <span class="saudacao-ola">Controle Inteligente de Compras 🛒</span>
           <strong class="saudacao-titulo">Meu Mercado</strong>
         </div>
 
-        <!-- Card de Ação Direta para a Lista Ativa de Compras -->
-        <div class="card-acao-grande" onclick="abrirTela('telaCompras', document.getElementById('navCompras'))">
-          <div class="card-acao-icone-g">🛒</div>
-          <div style="flex: 1;">
-            <div style="font-size: 18px; font-weight: 800; margin-bottom: 3px;">Ir para Compras</div>
-            <div id="inicioSubCompras" style="font-size: 13px; opacity: 0.9;">Acessar lista ativa</div>
+        <div class="grade-cards-inicio">
+          <!-- Card 1: Preparar Lista de Compras (Secretária / Família na despensa) -->
+          <div class="card-preparar-lista" onclick="abrirPrepararLista()">
+            <div class="card-icone-redondo">📝</div>
+            <div style="flex: 1;">
+              <div style="font-size: 17px; font-weight: 800; margin-bottom: 2px;">Preparar Lista de Compras</div>
+              <div style="font-size: 13px; opacity: 0.9;">Ditar itens da despensa sem digitar</div>
+            </div>
+            <div style="font-size: 20px; font-weight: 800;">➔</div>
           </div>
-          <div style="font-size: 22px; font-weight: 800;">➔</div>
+
+          <!-- Card 2: Fazer Compras no Supermercado (Fábio no mercado) -->
+          <div class="card-fazer-compras" onclick="abrirTela('telaCompras', document.getElementById('navCompras'))">
+            <div class="card-icone-redondo">🛒</div>
+            <div style="flex: 1;">
+              <div style="font-size: 17px; font-weight: 800; margin-bottom: 2px;">Fazer Compras no Mercado</div>
+              <div id="inicioSubCompras" style="font-size: 13px; opacity: 0.9;">Acessar lista ativa no supermercado</div>
+            </div>
+            <div style="font-size: 20px; font-weight: 800;">➔</div>
+          </div>
         </div>
 
         <!-- Sugestões de Reposição Inteligente -->
@@ -104,13 +116,76 @@
       </section>
 
       <!-- ==============================================================
-           2. TELA COMPRAS (A SUA LISTA DE COMPRAS NO MERCADO)
+           2. TELA PREPARAR LISTA (MODO DITADO CONTÍNUO DA DESPENSA)
+      =============================================================== -->
+      <section id="telaPrepararLista" class="tela">
+        <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h2 style="font-size: 18px; font-weight: 800;">📝 Preparar Lista de Compras</h2>
+            <p style="font-size: 12px; color: var(--texto-secundario);">Dite os produtos enquanto olha a despensa e a geladeira.</p>
+          </div>
+          <button class="btn-qtd" style="width: auto; padding: 6px 12px;" onclick="abrirTela('telaInicio', document.getElementById('navInicio'))">
+            Voltar
+          </button>
+        </div>
+
+        <!-- Nome da Lista que está sendo preparada -->
+        <div style="margin-bottom: 14px;">
+          <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 4px;">Nome desta Lista:</label>
+          <input type="text" id="nomeListaPreparacao" class="campo-input-custom" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--borda-padrao); font-size: 14px;" />
+        </div>
+
+        <!-- Card do Ditado Contínuo -->
+        <div class="card-ditado-despensa">
+          <div style="font-size: 15px; font-weight: 800; color: var(--texto-principal);">Ditado da Despensa (Voz Contínua)</div>
+          <p style="font-size: 12px; color: var(--texto-secundario); margin-top: 4px;">
+            Toque no microfone e vá falando: <em>"óleo"</em>, <em>"batata palha"</em>, <em>"extrato de tomate"</em>, <em>"creme de leite"</em>... O microfone aguarda o tempo que você precisar!
+          </p>
+
+          <button id="btnDitadoContinuo" class="btn-microfone-continuo" onclick="alternarDitadoContinuoDespensa()" title="Iniciar / Parar ditado">
+            🎙️
+          </button>
+
+          <div id="statusDitadoDespensa" class="status-ditado-box">
+            Microfone pronto. Toque no botão acima para iniciar o ditado da despensa.
+          </div>
+
+          <!-- Produtos Anotados em Tempo Real -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--texto-secundario);">Produtos Anotados:</span>
+            <span id="contadorItensDitados" style="font-size: 12px; font-weight: 800; color: var(--cor-marca);">0 produtos</span>
+          </div>
+
+          <div id="containerTagsDitadas" class="itens-ditados-container">
+            <!-- Tags injetadas via JS -->
+          </div>
+
+          <!-- Campo para digitar se preferir -->
+          <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+            <input type="text" id="inputItemManualDespensa" class="campo-input-custom" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--borda-padrao); font-size: 13px;" placeholder="Ou digite o item e aperte Enter..." onkeydown="adicionarItemDigitadoManual(event)" />
+            <button class="btn-qtd" style="width: auto; padding: 0 14px;" onclick="adicionarItemDigitadoManual()">Inserir</button>
+          </div>
+
+          <!-- Botão Gerar Lista -->
+          <button class="btn-confirmar-finalizar" style="padding: 16px; font-size: 16px;" onclick="concluirPreparacaoLista()">
+            ✅ Salvar Lista & Enviar para Minhas Listas
+          </button>
+        </div>
+      </section>
+
+      <!-- ==============================================================
+           3. TELA COMPRAS (SUPERMERCADO COM SELETOR DE LISTAS E DATA)
       =============================================================== -->
       <section id="telaCompras" class="tela">
-        <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+        
+        <!-- Barra de Seleção de Listas Abertas (Fábio pode alternar de lista facilmente) -->
+        <div class="barra-selecao-lista">
           <div>
-            <h2 id="tituloListaAtiva" style="font-size: 18px; font-weight: 800;">Compras do Mês</h2>
-            <p style="font-size: 12px; color: var(--texto-secundario);">Toque no microfone 🎙️ de cada item para falar o preço.</p>
+            <div style="font-size: 11px; font-weight: 700; color: var(--texto-secundario);">LISTA ATIVA:</div>
+            <select id="seletorListaAtiva" class="seletor-lista-dropdown" onchange="trocarListaComprasDropdown(this.value)">
+              <!-- Opções injetadas via JS -->
+            </select>
+            <div id="dataListaAtiva" class="data-criacao-lista">📅 Criada em 21/10/2026</div>
           </div>
           <button class="btn-qtd" style="width: auto; padding: 6px 12px; background: var(--cor-marca); color: #fff;" onclick="iniciarVozGeral()">
             + Item por Voz
@@ -161,7 +236,7 @@
       </section>
 
       <!-- ==============================================================
-           3. TELA LISTAS (GERENCIAMENTO DE MÚLTIPLAS LISTAS)
+           4. TELA LISTAS (GERENCIAMENTO DE MÚLTIPLAS LISTAS)
       =============================================================== -->
       <section id="telaListas" class="tela">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
@@ -192,7 +267,6 @@
           <div class="recibo-sub">Quem está fazendo as compras hoje?</div>
         </div>
 
-        <!-- Lista de Membros da Família -->
         <div id="gradeUsuariosFamilia" style="margin-bottom: 18px;">
           <!-- Injetado via JS -->
         </div>
@@ -325,7 +399,7 @@
     </div>
 
     <!-- ==================================================================
-         MENU INFERIOR (3 ABAS PRINCIPAIS CLARAS E INTUITIVAS)
+         MENU INFERIOR (3 ABAS PRINCIPAIS)
     =================================================================== -->
     <nav class="navegacao">
       <button class="nav-item ativo" id="navInicio" onclick="abrirTela('telaInicio', this)">
