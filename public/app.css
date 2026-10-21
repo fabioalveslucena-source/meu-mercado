@@ -1,7 +1,7 @@
 /* ============================================================================
    🛒 DESIGN SYSTEM — MEU MERCADO (PWA 2026)
    Cores Oficiais do Drive D: Gradiente Azul Petróleo (#092A42 -> #287EA5)
-   Identidade Verde Esmeralda PWA: #188A55 / #0F5735
+   Suporte a Tema Claro (Diurno) e Tema Escuro (Noturno)
 ============================================================================ */
 
 :root {
@@ -47,6 +47,90 @@
   --fonte-padrao: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
+/* ============================================================================
+   TEMA NOTURNO (MODO ESCURO - DRIVE D & FINANCEIRO)
+============================================================================ */
+body.tema-escuro {
+  --bg-primary: #0b1929;
+  --bg-card: #0f2744;
+  --bg-card-elevated: #132f4c;
+  --bg-card-subtle: #173a5e;
+
+  --texto-principal: #e7ebf0;
+  --texto-secundario: #aab4be;
+  --texto-suave: #6b7a90;
+
+  --borda-padrao: #1e3a5f;
+  --borda-suave: #132f4c;
+
+  --sombra-card: 0 4px 20px rgba(0, 0, 0, 0.45);
+  --sombra-elevada: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+body.tema-escuro .navegacao {
+  background: #0f2744;
+  border-top-color: #1e3a5f;
+}
+
+body.tema-escuro .termometro-orcamento {
+  background: #0f2744;
+  border-color: #1e3a5f;
+}
+
+body.tema-escuro .termometro-barra-fundo {
+  background-color: #173a5e;
+}
+
+body.tema-escuro .modal-card,
+body.tema-escuro .drawer-teclado {
+  background: #0f2744;
+  color: var(--texto-principal);
+}
+
+body.tema-escuro .btn-num {
+  background: #132f4c;
+  color: var(--texto-principal);
+  border-color: #1e3a5f;
+}
+
+body.tema-escuro .btn-num:active {
+  background: #173a5e;
+}
+
+body.tema-escuro .corredor-pill {
+  background: #0f2744;
+  border-color: #1e3a5f;
+  color: var(--texto-secundario);
+}
+
+body.tema-escuro .corredor-pill.ativo {
+  background: var(--cor-azul);
+  color: #ffffff;
+  border-color: var(--cor-azul);
+}
+
+body.tema-escuro .item-card.comprado {
+  background: #0a1b2d;
+  border-color: #132f4c;
+}
+
+body.tema-escuro .btn-qtd {
+  background: #173a5e;
+  color: var(--texto-principal);
+}
+
+body.tema-escuro .item-preco-tag {
+  background: #132f4c;
+  border-color: #1e3a5f;
+  color: var(--texto-principal);
+}
+
+body.tema-escuro .chip-sugestao {
+  background: #132f4c;
+  border-color: #1e3a5f;
+  color: var(--texto-principal);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -61,6 +145,7 @@ html, body {
   background-color: var(--bg-primary);
   color: var(--texto-principal);
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 #app {
@@ -70,26 +155,55 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 92px; /* Espaço para menu inferior */
+  padding-bottom: 92px;
   position: relative;
   background-color: var(--bg-primary);
 }
 
 /* ============================================================================
-   TOPO OFICIAL (HERDADO DO DRIVE D)
+   TOPO OFICIAL COM PERFIL DO USUÁRIO (COMO APP DE BANCO)
 ============================================================================ */
 .topo {
   width: 100%;
-  padding: 16px 20px;
+  padding: 14px 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(135deg, var(--topo-gradiente-inicio), var(--topo-gradiente-fim));
   color: var(--texto-claro);
-  box-shadow: 0 4px 20px rgba(9, 42, 66, 0.18);
+  box-shadow: 0 4px 20px rgba(9, 42, 66, 0.2);
   position: sticky;
   top: 0;
   z-index: 100;
+}
+
+.topo-esquerda {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+/* Foto / Avatar estilo banco */
+.avatar-usuario {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #5090d3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  flex-shrink: 0;
+}
+
+.avatar-usuario img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .topo-identidade {
@@ -97,20 +211,19 @@ html, body {
   flex-direction: column;
 }
 
-.topo-titulo {
-  font-size: 22px;
+.topo-nome-usuario {
+  font-size: 15px;
   font-weight: 800;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.2px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
-.topo-subtitulo {
-  font-size: 12px;
-  opacity: 0.88;
-  font-weight: 500;
-  margin-top: 1px;
+.topo-papel {
+  font-size: 11px;
+  opacity: 0.85;
+  font-weight: 600;
 }
 
 .topo-acoes {
@@ -137,19 +250,20 @@ html, body {
 
 .botao-icone:active {
   transform: scale(0.92);
-  background: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* ============================================================================
    TERMÔMETRO DE ORÇAMENTO (MELHORIA 2)
 ============================================================================ */
 .termometro-orcamento {
-  background: #ffffff;
+  background: var(--bg-card);
   padding: 12px 18px;
   margin: 14px 16px 4px 16px;
   border-radius: var(--raio-md);
   box-shadow: var(--sombra-card);
   border: 1px solid var(--borda-padrao);
+  transition: all 0.3s ease;
 }
 
 .termometro-topo {
@@ -226,7 +340,7 @@ html, body {
 }
 
 /* ============================================================================
-   TELA INÍCIO: CARDS PRINCIPAIS (HERDADOS DO DRIVE D)
+   TELA INÍCIO: CARDS PRINCIPAIS
 ============================================================================ */
 .saudacao {
   margin-bottom: 16px;
@@ -318,7 +432,7 @@ html, body {
    SUGESTÕES INTELIGENTES (MELHORIA 4)
 ============================================================================ */
 .secao-sugestoes {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: var(--raio-md);
   padding: 16px;
   box-shadow: var(--sombra-card);
@@ -344,7 +458,7 @@ html, body {
 
 .chip-sugestao {
   background: var(--bg-card-subtle);
-  border: 1px solid #d9e3ea;
+  border: 1px solid var(--borda-padrao);
   border-radius: var(--raio-full);
   padding: 7px 14px;
   font-size: 13px;
@@ -383,7 +497,7 @@ html, body {
 .corredor-pill {
   padding: 8px 16px;
   border-radius: var(--raio-full);
-  background: #ffffff;
+  background: var(--bg-card);
   border: 1px solid var(--borda-padrao);
   color: var(--texto-secundario);
   font-size: 13px;
@@ -404,7 +518,7 @@ html, body {
 }
 
 /* ============================================================================
-   LISTA DE ITENS DE COMPRAS
+   LISTA DE ITENS DE COMPRAS & MICROFONE NO ITEM
 ============================================================================ */
 .lista-itens {
   display: flex;
@@ -418,7 +532,7 @@ html, body {
   padding: 14px 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   box-shadow: var(--sombra-card);
   border: 1px solid var(--borda-padrao);
   transition: all 0.2s ease;
@@ -427,7 +541,7 @@ html, body {
 .item-card.comprado {
   background: #f8fafc;
   opacity: 0.65;
-  border-color: #e2e8f0;
+  border-color: var(--borda-padrao);
 }
 
 .item-card.comprado .item-nome {
@@ -445,7 +559,7 @@ html, body {
   justify-content: center;
   cursor: pointer;
   transition: all 0.18s ease;
-  background: #ffffff;
+  background: var(--bg-card);
   flex-shrink: 0;
   font-size: 16px;
 }
@@ -459,6 +573,7 @@ html, body {
 .item-info {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 }
 
 .item-nome {
@@ -477,12 +592,46 @@ html, body {
   margin-top: 1px;
 }
 
+/* Microfone direto no item para falar o preço */
+.btn-mic-item {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--borda-padrao);
+  background: var(--bg-card-subtle);
+  color: var(--texto-secundario);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.18s ease;
+}
+
+.btn-mic-item:active {
+  transform: scale(0.9);
+}
+
+.btn-mic-item.gravando {
+  background: var(--cor-vermelho);
+  color: #ffffff;
+  border-color: var(--cor-vermelho);
+  animation: pulsoMic 1.2s infinite;
+}
+
+@keyframes pulsoMic {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
 .item-qtd-controle {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: var(--bg-card-subtle);
-  padding: 4px 8px;
+  padding: 4px 6px;
   border-radius: var(--raio-sm);
 }
 
@@ -491,7 +640,7 @@ html, body {
   height: 24px;
   border-radius: 6px;
   border: none;
-  background: #ffffff;
+  background: var(--bg-card);
   color: var(--texto-principal);
   font-weight: 800;
   font-size: 14px;
@@ -510,16 +659,17 @@ html, body {
 }
 
 .item-preco-tag {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   color: var(--texto-principal);
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 6px 8px;
   background: var(--bg-card-subtle);
   border-radius: var(--raio-sm);
   border: 1px dashed #cbd5e1;
-  min-width: 65px;
+  min-width: 60px;
   text-align: right;
+  flex-shrink: 0;
 }
 
 .item-preco-tag.com-preco {
@@ -533,11 +683,11 @@ html, body {
 ============================================================================ */
 .barra-flutuante-rodape {
   position: fixed;
-  bottom: 82px;
+  bottom: 80px;
   left: 0;
   right: 0;
   padding: 10px 16px;
-  background: linear-gradient(180deg, rgba(244, 247, 249, 0) 0%, rgba(244, 247, 249, 0.95) 30%, #f4f7f9 100%);
+  background: linear-gradient(180deg, rgba(244, 247, 249, 0) 0%, rgba(244, 247, 249, 0.95) 30%, var(--bg-primary) 100%);
   display: flex;
   justify-content: center;
   z-index: 90;
@@ -575,7 +725,7 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
-  background: #ffffff;
+  background: var(--bg-card);
   border-top-left-radius: 26px;
   border-top-right-radius: 26px;
   padding: 20px;
@@ -651,7 +801,7 @@ html, body {
 }
 
 /* ============================================================================
-   MODAL RECIBO DIGITAL (MELHORIA 5 + BIP)
+   MODAIS (PERFIL, RECIBO, NOVA LISTA)
 ============================================================================ */
 .modal-overlay {
   position: fixed;
@@ -677,7 +827,7 @@ html, body {
 }
 
 .modal-card {
-  background: #ffffff;
+  background: var(--bg-card);
   border-radius: 26px;
   width: 100%;
   max-width: 440px;
@@ -756,7 +906,7 @@ html, body {
   padding: 10px 12px;
   border-radius: var(--raio-sm);
   border: 1px solid var(--borda-padrao);
-  background: #ffffff;
+  background: var(--bg-card);
   font-size: 13px;
   font-weight: 700;
   color: var(--texto-principal);
@@ -818,6 +968,7 @@ html, body {
   margin: 0 auto;
   z-index: 100;
   box-shadow: 0 -4px 18px rgba(9, 42, 66, 0.06);
+  transition: background 0.3s ease;
 }
 
 .nav-item {

@@ -1,12 +1,16 @@
 /**
  * ============================================================================
- * 🛒 MOTOR DA APLICAÇÃO — MEU MERCADO (PWA 2026)
+ * 🛒 MOTOR DA APLICAÇÃO — MEU MERCADO (PWA 2026 v2.1)
  * ============================================================================
- * Integração completa:
- * - Layout oficial do Drive D com cores azul petróleo (#092A42 -> #287EA5)
- * - Som sintetizado Web Audio API (Bip de item + Bip de caixa registradora ao finalizar)
- * - 5 Superpoderes: Teclado Maquininha, Termômetro de Orçamento, Corredores, Sugestões e Recibo Digital
- * - Sincronização com Google Sheets e com o Meu Financeiro
+ * Atualizações Críticas:
+ * - 👤 Perfil do Usuário com Foto e Nome no Cabeçalho (Estilo App de Banco)
+ * - 🌙 Modo Noturno e Diurno (Tema Escuro / Claro)
+ * - 🎙️ Comando de Voz Ajustado:
+ *    1) Microfone Direto no Item para Falar Preço ("5,70" -> salva e bip!)
+ *    2) Microfone Geral com Parser Inteligente (separa nome e valor)
+ * - 📋 Minhas Listas: Abrir Lista ao Clicar + Criar Nova Lista
+ * - 🏪 Modo Mercado Descomplicado com 1 mão só
+ * - 🔊 Bip Web Audio API ao marcar item e ao finalizar compra
  */
 
 const CONFIG = {
@@ -16,47 +20,36 @@ const CONFIG = {
 };
 
 // ============================================================================
-// DADOS INICIAIS / PADRÃO
+// DADOS INICIAIS
 // ============================================================================
-const CATEGORIAS_PADRAO = [
-  { id: 'hortifruti', nome: '🥬 Hortifrúti' },
-  { id: 'carnes', nome: '🥩 Carnes & Frios' },
-  { id: 'laticinios', nome: '🧀 Laticínios' },
-  { id: 'mercearia', nome: '🥫 Mercearia' },
-  { id: 'padaria', nome: '🍞 Padaria' },
-  { id: 'bebidas', nome: '🥤 Bebidas' },
-  { id: 'higiene', nome: '🧴 Higiene' },
-  { id: 'limpeza', nome: '🧼 Limpeza' },
-  { id: 'outros', nome: '📦 Outros' }
-];
-
 const PRODUTOS_PADRAO = [
-  { id: 'p1', nome: 'Arroz Tipo 1 5kg', categoria: '🥫 Mercearia', precoMedio: 28.50, frequenciaDias: 30 },
-  { id: 'p2', nome: 'Feijão Preto 1kg', categoria: '🥫 Mercearia', precoMedio: 8.90, frequenciaDias: 15 },
-  { id: 'p3', nome: 'Leite Integral 1L', categoria: '🧀 Laticínios', precoMedio: 5.20, frequenciaDias: 7 },
-  { id: 'p4', nome: 'Café Torrado 500g', categoria: '🥫 Mercearia', precoMedio: 18.90, frequenciaDias: 15 },
-  { id: 'p5', nome: 'Açúcar Refinado 1kg', categoria: '🥫 Mercearia', precoMedio: 4.80, frequenciaDias: 30 },
-  { id: 'p6', nome: 'Óleo de Soja 900ml', categoria: '🥫 Mercearia', precoMedio: 6.90, frequenciaDias: 20 },
-  { id: 'p7', nome: 'Banana Prata (kg)', categoria: '🥬 Hortifrúti', precoMedio: 7.50, frequenciaDias: 7 },
-  { id: 'p8', nome: 'Tomate Italiano (kg)', categoria: '🥬 Hortifrúti', precoMedio: 8.90, frequenciaDias: 7 },
-  { id: 'p9', nome: 'Cebola (kg)', categoria: '🥬 Hortifrúti', precoMedio: 5.80, frequenciaDias: 15 },
-  { id: 'p10', nome: 'Peito de Frango (kg)', categoria: '🥩 Carnes & Frios', precoMedio: 19.90, frequenciaDias: 10 },
-  { id: 'p11', nome: 'Queijo Mussarela (kg)', categoria: '🧀 Laticínios', precoMedio: 44.90, frequenciaDias: 15 },
-  { id: 'p12', nome: 'Detergente Líquido', categoria: '🧼 Limpeza', precoMedio: 2.50, frequenciaDias: 15 },
-  { id: 'p13', nome: 'Sabão em Pó 1.6kg', categoria: '🧼 Limpeza', precoMedio: 18.50, frequenciaDias: 30 },
-  { id: 'p14', nome: 'Papel Higiênico 12un', categoria: '🧴 Higiene', precoMedio: 22.90, frequenciaDias: 25 },
-  { id: 'p15', nome: 'Pão de Forma', categoria: '🍞 Padaria', precoMedio: 8.50, frequenciaDias: 7 }
+  { id: 'p1', nome: 'Arroz Tipo 1 5kg', categoria: '🥫 Mercearia', precoMedio: 28.50 },
+  { id: 'p2', nome: 'Feijão Preto 1kg', categoria: '🥫 Mercearia', precoMedio: 8.90 },
+  { id: 'p3', nome: 'Leite Integral 1L', categoria: '🧀 Laticínios', precoMedio: 5.70 },
+  { id: 'p4', nome: 'Café Torrado 500g', categoria: '🥫 Mercearia', precoMedio: 18.90 },
+  { id: 'p5', nome: 'Açúcar Refinado 1kg', categoria: '🥫 Mercearia', precoMedio: 4.80 },
+  { id: 'p6', nome: 'Banana Prata (kg)', categoria: '🥬 Hortifrúti', precoMedio: 7.50 },
+  { id: 'p7', nome: 'Tomate Italiano (kg)', categoria: '🥬 Hortifrúti', precoMedio: 8.90 },
+  { id: 'p8', nome: 'Peito de Frango (kg)', categoria: '🥩 Carnes', precoMedio: 19.90 },
+  { id: 'p9', nome: 'Detergente Líquido', categoria: '🧼 Limpeza', precoMedio: 2.50 },
+  { id: 'p10', nome: 'Papel Higiênico 12un', categoria: '🧴 Higiene', precoMedio: 22.90 }
 ];
 
 // ============================================================================
-// ESTADO GLOBAL DA APLICAÇÃO
+// ESTADO GLOBAL
 // ============================================================================
 let appState = {
-  usuario: 'Fábio Lucena',
-  listaAtivaId: 'lst_atual',
+  perfil: {
+    nome: 'Fábio Lucena',
+    papel: 'Administrador',
+    avatar: '👨‍💼', // emoji ou URL de foto data:image
+    fotoUrl: ''
+  },
+  tema: 'claro', // 'claro' ou 'escuro'
+  listaAtivaId: 'lst_1',
   listas: [
     {
-      id: 'lst_atual',
+      id: 'lst_1',
       nome: 'Compras do Mês',
       status: 'ABERTA',
       dataCriacao: new Date().toISOString(),
@@ -64,13 +57,12 @@ let appState = {
     }
   ],
   itens: [
-    { id: 'i1', idLista: 'lst_atual', produto: 'Arroz Tipo 1 5kg', categoria: '🥫 Mercearia', quantidade: 1, precoUnitario: 28.50, comprado: true },
-    { id: 'i2', idLista: 'lst_atual', produto: 'Feijão Preto 1kg', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 8.90, comprado: true },
-    { id: 'i3', idLista: 'lst_atual', produto: 'Leite Integral 1L', categoria: '🧀 Laticínios', quantidade: 6, precoUnitario: 5.20, comprado: false },
-    { id: 'i4', idLista: 'lst_atual', produto: 'Café Torrado 500g', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 18.90, comprado: false },
-    { id: 'i5', idLista: 'lst_atual', produto: 'Banana Prata (kg)', categoria: '🥬 Hortifrúti', quantidade: 1.5, precoUnitario: 7.50, comprado: false },
-    { id: 'i6', idLista: 'lst_atual', produto: 'Tomate Italiano (kg)', categoria: '🥬 Hortifrúti', quantidade: 1.2, precoUnitario: 8.90, comprado: false },
-    { id: 'i7', idLista: 'lst_atual', produto: 'Detergente Líquido', categoria: '🧼 Limpeza', quantidade: 3, precoUnitario: 2.50, comprado: false }
+    { id: 'i1', idLista: 'lst_1', produto: 'Arroz Tipo 1 5kg', categoria: '🥫 Mercearia', quantidade: 1, precoUnitario: 28.50, comprado: true },
+    { id: 'i2', idLista: 'lst_1', produto: 'Feijão Preto 1kg', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 8.90, comprado: true },
+    { id: 'i3', idLista: 'lst_1', produto: 'Leite Integral 1L', categoria: '🧀 Laticínios', quantidade: 6, precoUnitario: 5.70, comprado: false },
+    { id: 'i4', idLista: 'lst_1', produto: 'Café Torrado 500g', categoria: '🥫 Mercearia', quantidade: 2, precoUnitario: 18.90, comprado: false },
+    { id: 'i5', idLista: 'lst_1', produto: 'Tomate Italiano (kg)', categoria: '🥬 Hortifrúti', quantidade: 1.5, precoUnitario: 8.90, comprado: false },
+    { id: 'i6', idLista: 'lst_1', produto: 'Detergente Líquido', categoria: '🧼 Limpeza', quantidade: 3, precoUnitario: 2.50, comprado: false }
   ],
   produtos: PRODUTOS_PADRAO,
   historico: [],
@@ -80,30 +72,57 @@ let appState = {
 };
 
 // ============================================================================
-// PERSISTÊNCIA & INICIALIZAÇÃO
+// PERSISTÊNCIA
 // ============================================================================
 function salvarLocal() {
   try {
     localStorage.setItem(CONFIG.STORAGE_PREFIX + 'state', JSON.stringify(appState));
   } catch (e) {
-    console.warn('Erro ao salvar local:', e);
+    console.warn('Erro ao salvar no localStorage:', e);
   }
 }
 
 function carregarLocal() {
   try {
-    const dados = localStorage.getItem(CONFIG.STORAGE_PREFIX + 'state');
-    if (dados) {
-      const parsed = JSON.parse(dados);
+    const salvo = localStorage.getItem(CONFIG.STORAGE_PREFIX + 'state');
+    if (salvo) {
+      const parsed = JSON.parse(salvo);
       appState = { ...appState, ...parsed };
     }
   } catch (e) {
-    console.warn('Erro ao carregar local:', e);
+    console.warn('Erro ao carregar do localStorage:', e);
   }
 }
 
 // ============================================================================
-// NAVEGAÇÃO ENTRE TELAS
+// TEMA NOTURNO / DIURNO
+// ============================================================================
+window.alternarTema = function() {
+  if (appState.tema === 'escuro') {
+    appState.tema = 'claro';
+    document.body.classList.remove('tema-escuro');
+    document.getElementById('btnTema').textContent = '🌙';
+  } else {
+    appState.tema = 'escuro';
+    document.body.classList.add('tema-escuro');
+    document.getElementById('btnTema').textContent = '☀️';
+  }
+  salvarLocal();
+};
+
+function aplicarTemaInicial() {
+  const btn = document.getElementById('btnTema');
+  if (appState.tema === 'escuro') {
+    document.body.classList.add('tema-escuro');
+    if (btn) btn.textContent = '☀️';
+  } else {
+    document.body.classList.remove('tema-escuro');
+    if (btn) btn.textContent = '🌙';
+  }
+}
+
+// ============================================================================
+// NAVEGAÇÃO
 // ============================================================================
 window.abrirTela = function(idTela, botaoNav) {
   document.querySelectorAll('.tela').forEach(t => t.classList.remove('ativa'));
@@ -112,18 +131,25 @@ window.abrirTela = function(idTela, botaoNav) {
     telaAlvo.classList.add('ativa');
   }
 
+  // Atualiza botões da barra inferior
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('ativo'));
   if (botaoNav) {
-    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('ativo'));
     botaoNav.classList.add('ativo');
+  } else {
+    // Sincroniza o botão pelo id da tela
+    if (idTela === 'telaInicio') document.getElementById('navInicio')?.classList.add('ativo');
+    if (idTela === 'telaCompras') document.getElementById('navCompras')?.classList.add('ativo');
+    if (idTela === 'telaModoMercado') document.getElementById('navModoMercado')?.classList.add('ativo');
+    if (idTela === 'telaListas') document.getElementById('navListas')?.classList.add('ativo');
   }
 
   renderizarTudo();
 };
 
 // ============================================================================
-// CÁLCULOS & TOTAIS
+// CÁLCULOS
 // ============================================================================
-function calcularTotaisLista(idLista = appState.listaAtivaId) {
+function calcularTotais(idLista = appState.listaAtivaId) {
   const itens = appState.itens.filter(i => i.idLista === idLista);
   let totalEstimado = 0;
   let totalCarrinho = 0;
@@ -148,58 +174,67 @@ function calcularTotaisLista(idLista = appState.listaAtivaId) {
     totalEstimado,
     totalCarrinho,
     meta,
-    percMeta
+    percMeta,
+    nomeLista: lista?.nome || 'Lista Ativa'
   };
 }
 
 // ============================================================================
-// RENDERIZAÇÃO PRINCIPAL
+// RENDERIZAÇÃO
 // ============================================================================
 function renderizarTudo() {
+  renderizarCabecalhoPerfil();
   renderizarTermometro();
   renderizarTelaInicio();
   renderizarTelaCompras();
   renderizarTelaModoMercado();
   renderizarTelaListas();
-  renderizarTelaProdutos();
   salvarLocal();
 }
 
-// 1. Renderiza o Termômetro de Orçamento
-function renderizarTermometro() {
-  const totais = calcularTotaisLista();
-  const elementoGasto = document.getElementById('termometroGasto');
-  const elementoMeta = document.getElementById('termometroMeta');
-  const barra = document.getElementById('termometroBarra');
-  const badgePerc = document.getElementById('termometroPerc');
+function renderizarCabecalhoPerfil() {
+  const nomeDisplay = document.getElementById('topoNomeUsuario');
+  const papelDisplay = document.getElementById('topoPapelUsuario');
+  const avatarContainer = document.getElementById('avatarUsuario');
 
-  if (elementoGasto) elementoGasto.textContent = formatarMoeda(totais.totalCarrinho);
-  if (elementoMeta) elementoMeta.textContent = `Meta: ${formatarMoeda(totais.meta)}`;
-  if (badgePerc) badgePerc.textContent = `${totais.percMeta}%`;
+  if (nomeDisplay) nomeDisplay.textContent = appState.perfil.nome;
+  if (papelDisplay) papelDisplay.textContent = appState.perfil.papel;
 
-  if (barra) {
-    barra.style.width = `${totais.percMeta}%`;
-    barra.className = 'termometro-barra-progresso';
-    if (totais.percMeta >= 95) {
-      barra.classList.add('perigo');
-    } else if (totais.percMeta >= 80) {
-      barra.classList.add('alerta');
+  if (avatarContainer) {
+    if (appState.perfil.fotoUrl) {
+      avatarContainer.innerHTML = `<img src="${appState.perfil.fotoUrl}" alt="Foto de perfil" />`;
+    } else {
+      avatarContainer.textContent = appState.perfil.avatar || '👨‍💼';
     }
   }
 }
 
-// 2. Renderiza a Tela Inicial
+function renderizarTermometro() {
+  const totais = calcularTotais();
+  const elementoGasto = document.getElementById('termometroGasto');
+  const elementoMeta = document.getElementById('termometroMeta');
+  const barra = document.getElementById('termometroBarra');
+
+  if (elementoGasto) elementoGasto.textContent = formatarMoeda(totais.totalCarrinho);
+  if (elementoMeta) elementoMeta.textContent = `Meta: ${formatarMoeda(totais.meta)}`;
+
+  if (barra) {
+    barra.style.width = `${totais.percMeta}%`;
+    barra.className = 'termometro-barra-progresso';
+    if (totais.percMeta >= 95) barra.classList.add('perigo');
+    else if (totais.percMeta >= 80) barra.classList.add('alerta');
+  }
+}
+
 function renderizarTelaInicio() {
-  const totais = calcularTotaisLista();
+  const totais = calcularTotais();
   const subCompras = document.getElementById('inicioSubCompras');
   if (subCompras) {
-    subCompras.textContent = `${totais.itensComprados} de ${totais.totalItens} itens no carrinho (${formatarMoeda(totais.totalCarrinho)})`;
+    subCompras.textContent = `${totais.nomeLista}: ${totais.itensComprados} de ${totais.totalItens} no carrinho (${formatarMoeda(totais.totalCarrinho)})`;
   }
 
-  // Sugestões inteligentes de reposição
   const containerSugestoes = document.getElementById('chipsSugestoes');
   if (containerSugestoes) {
-    // Filtra produtos padrão que não estão na lista ativa
     const nomesNaLista = appState.itens.filter(i => i.idLista === appState.listaAtivaId).map(i => i.produto.toLowerCase());
     const sugestoes = appState.produtos.filter(p => !nomesNaLista.includes(p.nome.toLowerCase())).slice(0, 6);
 
@@ -211,14 +246,11 @@ function renderizarTelaInicio() {
   }
 }
 
-// 3. Renderiza a Tela de Compras (com agrupamento por corredor)
 function renderizarTelaCompras() {
   const container = document.getElementById('listaItensCompras');
   if (!container) return;
 
   let itens = appState.itens.filter(i => i.idLista === appState.listaAtivaId);
-
-  // Filtro por corredor
   if (appState.corredorAtivo !== 'todos') {
     itens = itens.filter(i => i.categoria.includes(appState.corredorAtivo));
   }
@@ -226,9 +258,9 @@ function renderizarTelaCompras() {
   if (itens.length === 0) {
     container.innerHTML = `
       <div style="text-align: center; padding: 40px 20px; color: var(--texto-secundario);">
-        <div style="font-size: 40px; margin-bottom: 10px;">🛒</div>
-        <strong style="font-size: 16px; color: var(--texto-principal);">Nenhum item nesta seção</strong>
-        <p style="font-size: 13px; margin-top: 4px;">Adicione produtos ou escolha outra categoria acima.</p>
+        <div style="font-size: 38px; margin-bottom: 8px;">🛒</div>
+        <strong>Nenhum item nesta seção</strong>
+        <p style="font-size: 13px; margin-top: 4px;">Adicione novos produtos ou toque em "Todos" acima.</p>
       </div>
     `;
     return;
@@ -245,6 +277,11 @@ function renderizarTelaCompras() {
         <div class="item-categoria">${item.categoria}</div>
       </div>
 
+      <!-- Microfone no Item para falar o preço -->
+      <button class="btn-mic-item" id="mic_${item.id}" onclick="ouvirPrecoDoItem('${item.id}', this)" title="Falar preço deste item">
+        🎙️
+      </button>
+
       <div class="item-qtd-controle">
         <button class="btn-qtd" onclick="alterarQuantidade('${item.id}', -1)">-</button>
         <span class="qtd-valor">${item.quantidade}</span>
@@ -258,7 +295,6 @@ function renderizarTelaCompras() {
   `).join('');
 }
 
-// 4. Renderiza o Modo Mercado
 function renderizarTelaModoMercado() {
   const container = document.getElementById('listaModoMercado');
   if (!container) return;
@@ -268,18 +304,26 @@ function renderizarTelaModoMercado() {
   const comprados = itens.filter(i => i.comprado);
 
   container.innerHTML = `
-    <div style="margin-bottom: 14px; font-weight: 800; font-size: 14px; color: var(--texto-secundario);">
-      PENDENTES NO CORREDOR (${pendentes.length})
+    <div style="margin-bottom: 12px; font-weight: 800; font-size: 13px; color: var(--texto-secundario); display: flex; justify-content: space-between;">
+      <span>PENDENTES NO CORREDOR (${pendentes.length})</span>
+      <small style="color: var(--cor-marca);">Toque no 🎙️ para falar o valor</small>
     </div>
+    
     <div class="lista-itens" style="margin-bottom: 24px;">
-      ${pendentes.length === 0 ? '<div style="color: var(--cor-marca); font-weight: 700; padding: 12px 0;">🎉 Todos os itens foram pegos!</div>' : pendentes.map(item => `
+      ${pendentes.length === 0 ? '<div style="color: var(--cor-marca); font-weight: 700; padding: 12px 0;">🎉 Maravilha! Todos os produtos foram pegos!</div>' : pendentes.map(item => `
         <div class="item-card" style="padding: 16px;">
           <div class="item-checkbox" onclick="alternarItem('${item.id}')"></div>
           <div class="item-info" onclick="alternarItem('${item.id}')">
             <div class="item-nome" style="font-size: 16px;">${item.produto}</div>
-            <div class="item-categoria">${item.categoria} • Qtd: ${item.quantidade}</div>
+            <div class="item-categoria">${item.categoria} • ${item.quantidade} un</div>
           </div>
-          <div class="item-preco-tag ${item.precoUnitario > 0 ? 'com-preco' : ''}" style="font-size: 16px;" onclick="abrirTecladoPreco('${item.id}')">
+          
+          <!-- Microfone direto para falar o valor no corredor -->
+          <button class="btn-mic-item" id="mic_modo_${item.id}" onclick="ouvirPrecoDoItem('${item.id}', this)" title="Falar preço deste item">
+            🎙️
+          </button>
+
+          <div class="item-preco-tag ${item.precoUnitario > 0 ? 'com-preco' : ''}" style="font-size: 15px;" onclick="abrirTecladoPreco('${item.id}')">
             ${item.precoUnitario > 0 ? formatarMoeda(item.precoUnitario) : '+ Preço'}
           </div>
         </div>
@@ -287,7 +331,7 @@ function renderizarTelaModoMercado() {
     </div>
 
     ${comprados.length > 0 ? `
-      <div style="margin-bottom: 14px; font-weight: 800; font-size: 14px; color: var(--cor-marca);">
+      <div style="margin-bottom: 12px; font-weight: 800; font-size: 13px; color: var(--cor-marca);">
         JÁ NO CARRINHO (${comprados.length})
       </div>
       <div class="lista-itens">
@@ -296,7 +340,7 @@ function renderizarTelaModoMercado() {
             <div class="item-checkbox" onclick="alternarItem('${item.id}')">✓</div>
             <div class="item-info" onclick="alternarItem('${item.id}')">
               <div class="item-nome">${item.produto}</div>
-              <div class="item-categoria">${item.quantidade} x ${formatarMoeda(item.precoUnitario)}</div>
+              <div class="item-categoria">${item.quantidade} un x ${formatarMoeda(item.precoUnitario)}</div>
             </div>
             <div class="item-preco-tag com-preco">
               ${formatarMoeda(item.quantidade * item.precoUnitario)}
@@ -308,99 +352,316 @@ function renderizarTelaModoMercado() {
   `;
 }
 
-// 5. Renderiza a Tela de Listas
+// 4. Renderiza a Tela Minhas Listas (Com Abrir Lista e Ações)
 function renderizarTelaListas() {
   const container = document.getElementById('containerListas');
   if (!container) return;
 
   container.innerHTML = appState.listas.map(lista => {
-    const t = calcularTotaisLista(lista.id);
+    const t = calcularTotais(lista.id);
+    const estaAtiva = lista.id === appState.listaAtivaId;
+
     return `
-      <div class="item-card" style="margin-bottom: 12px; cursor: pointer;" onclick="selecionarLista('${lista.id}')">
-        <div style="font-size: 28px;">📋</div>
-        <div class="item-info">
-          <div class="item-nome" style="font-size: 16px;">${lista.nome}</div>
+      <div class="item-card" style="margin-bottom: 12px; ${estaAtiva ? 'border: 2px solid var(--cor-azul);' : ''}">
+        <div style="font-size: 30px; cursor: pointer;" onclick="selecionarLista('${lista.id}')">📋</div>
+        
+        <div class="item-info" onclick="selecionarLista('${lista.id}')">
+          <div class="item-nome" style="font-size: 16px;">
+            ${lista.nome} ${estaAtiva ? '<span style="font-size: 11px; color: var(--cor-azul); background: var(--cor-azul-light); padding: 2px 8px; border-radius: 10px;">ATIVA</span>' : ''}
+          </div>
           <div class="item-categoria">
-            Status: <strong style="color: ${lista.status === 'ABERTA' ? 'var(--cor-marca)' : 'var(--texto-suave)'}">${lista.status}</strong> • ${t.totalItens} itens
+            Status: <strong style="color: ${lista.status === 'ABERTA' ? 'var(--cor-marca)' : 'var(--texto-suave)'}">${lista.status}</strong> • ${t.itensComprados}/${t.totalItens} no carrinho
           </div>
         </div>
-        <div style="text-align: right;">
+
+        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
           <div style="font-size: 15px; font-weight: 800; color: var(--cor-marca);">${formatarMoeda(t.totalCarrinho)}</div>
-          <small style="color: var(--texto-suave); font-size: 11px;">${new Date(lista.dataCriacao).toLocaleDateString('pt-BR')}</small>
+          <button class="btn-qtd" style="width: auto; padding: 4px 10px; font-size: 11px; background: var(--cor-azul); color: #fff;" onclick="selecionarLista('${lista.id}')">
+            Abrir
+          </button>
         </div>
       </div>
     `;
   }).join('');
 }
 
-// 6. Renderiza a Tela de Produtos
-function renderizarTelaProdutos() {
-  const container = document.getElementById('containerCatalogoProdutos');
-  if (!container) return;
+// ============================================================================
+// AÇÕES DE LISTA
+// ============================================================================
+window.selecionarLista = function(idLista) {
+  appState.listaAtivaId = idLista;
+  window.SomMercado.bipItem();
+  abrirTela('telaCompras', document.getElementById('navCompras'));
+};
 
-  container.innerHTML = appState.produtos.map(p => `
-    <div class="item-card" style="margin-bottom: 8px;">
-      <div class="item-info">
-        <div class="item-nome">${p.nome}</div>
-        <div class="item-categoria">${p.categoria} • Médio: ${formatarMoeda(p.precoMedio)}</div>
-      </div>
-      <button class="btn-qtd" style="width: auto; padding: 6px 12px;" onclick="adicionarProdutoRapido('${p.id}')">
-        + Adicionar
-      </button>
-    </div>
-  `).join('');
+window.abrirModalNovaLista = function() {
+  const modal = document.getElementById('modalNovaLista');
+  if (modal) modal.classList.add('aberto');
+};
+
+window.fecharModalNovaLista = function() {
+  const modal = document.getElementById('modalNovaLista');
+  if (modal) modal.classList.remove('aberto');
+};
+
+window.salvarNovaLista = function() {
+  const inputNome = document.getElementById('nomeNovaLista');
+  const inputMeta = document.getElementById('metaNovaLista');
+  const nome = inputNome?.value.trim() || 'Nova Compra';
+  const meta = parseFloat(inputMeta?.value) || 300.00;
+
+  const nova = {
+    id: 'lst_' + Date.now(),
+    nome: nome,
+    status: 'ABERTA',
+    dataCriacao: new Date().toISOString(),
+    orcamentoMeta: meta
+  };
+
+  appState.listas.unshift(nova);
+  appState.listaAtivaId = nova.id;
+
+  if (inputNome) inputNome.value = '';
+  window.SomMercado.bipItem();
+  fecharModalNovaLista();
+  abrirTela('telaCompras', document.getElementById('navCompras'));
+};
+
+// ============================================================================
+// MICROFONE NO ITEM (FALAR PREÇO DE UM PRODUTO)
+// ============================================================================
+window.ouvirPrecoDoItem = function(idItem, botao) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Reconhecimento de voz não suportado neste navegador.');
+    return;
+  }
+
+  const item = appState.itens.find(i => i.id === idItem);
+  if (!item) return;
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'pt-BR';
+  recognition.continuous = false;
+
+  if (botao) botao.classList.add('gravando');
+  window.SomMercado.bipItem();
+
+  recognition.onresult = function(event) {
+    const fala = event.results[0][0].transcript;
+    console.log(`Preço falado para "${item.produto}":`, fala);
+
+    const preco = extrairPrecoDaFala(fala);
+    if (preco !== null && preco > 0) {
+      item.precoUnitario = preco;
+      item.comprado = true; // Já marca como pego no carrinho!
+      window.SomMercado.bipItem();
+      renderizarTudo();
+    } else {
+      alert(`Não entendi o valor "${fala}". Tente dizer apenas o número (ex: "cinco e setenta" ou "5,70").`);
+    }
+  };
+
+  recognition.onerror = function() {
+    if (botao) botao.classList.remove('gravando');
+  };
+
+  recognition.onend = function() {
+    if (botao) botao.classList.remove('gravando');
+  };
+
+  recognition.start();
+};
+
+function extrairPrecoDaFala(texto) {
+  let limpo = texto.toLowerCase()
+    .replace(/reais?/g, '')
+    .replace(/centavos?/g, '')
+    .replace(/cada/g, '')
+    .replace(/por/g, '')
+    .trim();
+
+  // Ex: "5,70" ou "5.70"
+  const regexNum = /(\d+)[,\.]?(\d{0,2})/;
+  const match = limpo.match(regexNum);
+  if (match) {
+    const inteiros = match[1];
+    let centavos = match[2] || '0';
+    if (centavos.length === 1) centavos += '0';
+    return parseFloat(`${inteiros}.${centavos}`);
+  }
+
+  // Conversão de números por extenso básicos
+  const mapa = {
+    'um': 1, 'dois': 2, 'duas': 2, 'três': 3, 'tres': 3, 'quatro': 4,
+    'cinco': 5, 'seis': 6, 'sete': 7, 'oito': 8, 'nove': 9, 'dez': 10,
+    'quinze': 15, 'vinte': 20, 'trinta': 30, 'cinquenta': 50
+  };
+
+  const partes = limpo.split(/\s+e\s+|\s+/);
+  if (partes.length >= 1 && mapa[partes[0]]) {
+    const inteiros = mapa[partes[0]];
+    let centavos = 0;
+    if (partes.length >= 2 && mapa[partes[1]]) centavos = mapa[partes[1]];
+    return inteiros + (centavos / 100);
+  }
+
+  return null;
 }
 
 // ============================================================================
-// AÇÕES DO USUÁRIO & REGRAS DE NEGÓCIO
+// MICROFONE GERAL DO TOPO (COM PARSER INTELIGENTE)
 // ============================================================================
+window.iniciarVozGeral = function() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    alert('Comando de voz não suportado neste navegador.');
+    return;
+  }
 
-// Alternar item comprado com Som de Bip
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'pt-BR';
+  recognition.continuous = false;
+
+  const btn = document.getElementById('btnVozTopo');
+  if (btn) btn.style.background = '#ef4444';
+  window.SomMercado.bipItem();
+
+  recognition.onresult = function(event) {
+    const fala = event.results[0][0].transcript;
+    processarAdicaoVoz(fala);
+  };
+
+  recognition.onend = function() {
+    if (btn) btn.style.background = '';
+  };
+
+  recognition.start();
+};
+
+function processarAdicaoVoz(frase) {
+  let limpo = frase.toLowerCase().replace(/^(adicionar|coloque|comprar|colocar)\s+/i, '').trim();
+
+  // Verifica se há preço no final: "leite integral 5,70 cada" ou "tomate 8 reais"
+  const regex = /^(.*?)(?:por\s+|\s+)(\d+(?:[,\.]\d{1,2})?)\s*(?:reais|real)?(?:\s*cada)?$/i;
+  const match = limpo.match(regex);
+
+  let nome = limpo;
+  let preco = 0;
+
+  if (match && match[1].trim().length > 1) {
+    nome = match[1].trim();
+    preco = parseFloat(match[2].replace(',', '.')) || 0;
+  }
+
+  // Remove repetições acidentais e formata
+  nome = nome.charAt(0).toUpperCase() + nome.slice(1);
+
+  appState.itens.push({
+    id: 'voz_' + Date.now(),
+    idLista: appState.listaAtivaId,
+    produto: nome,
+    categoria: '📦 Outros',
+    quantidade: 1,
+    precoUnitario: preco,
+    comprado: preco > 0
+  });
+
+  window.SomMercado.bipItem();
+  renderizarTudo();
+  alert(`🎙️ Produto adicionado:\n${nome}${preco > 0 ? ' • R$ ' + preco.toFixed(2) : ''}`);
+}
+
+// ============================================================================
+// MODAL DE PERFIL (FOTO E NOME - ESTILO BANCO)
+// ============================================================================
+window.abrirModalPerfil = function() {
+  const modal = document.getElementById('modalPerfil');
+  const inputNome = document.getElementById('inputNomePerfil');
+  if (inputNome) inputNome.value = appState.perfil.nome;
+  if (modal) modal.classList.add('aberto');
+};
+
+window.fecharModalPerfil = function() {
+  const modal = document.getElementById('modalPerfil');
+  if (modal) modal.classList.remove('aberto');
+};
+
+window.trocarPerfilPredefinido = function(nome, papel, avatar) {
+  appState.perfil.nome = nome;
+  appState.perfil.papel = papel;
+  appState.perfil.avatar = avatar;
+  appState.perfil.fotoUrl = '';
+  salvarLocal();
+  renderizarCabecalhoPerfil();
+  fecharModalPerfil();
+  window.SomMercado.bipItem();
+};
+
+window.salvarPerfilCustomizado = function() {
+  const inputNome = document.getElementById('inputNomePerfil');
+  if (inputNome && inputNome.value.trim()) {
+    appState.perfil.nome = inputNome.value.trim();
+  }
+  salvarLocal();
+  renderizarCabecalhoPerfil();
+  fecharModalPerfil();
+  window.SomMercado.bipItem();
+};
+
+window.carregarFotoPerfilArquivo = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    appState.perfil.fotoUrl = e.target.result;
+    salvarLocal();
+    renderizarCabecalhoPerfil();
+  };
+  reader.readAsDataURL(file);
+};
+
+// ============================================================================
+// DEMAIS AÇÕES DE ITENS & TECLADO
+// ============================================================================
 window.alternarItem = function(idItem) {
   const item = appState.itens.find(i => i.id === idItem);
   if (!item) return;
 
   item.comprado = !item.comprado;
-
-  // Som & Vibração
-  if (item.comprado) {
-    window.SomMercado.bipItem();
-  } else {
-    window.SomMercado.bipDesmarcar();
-  }
+  if (item.comprado) window.SomMercado.bipItem();
+  else window.SomMercado.bipDesmarcar();
 
   renderizarTudo();
 };
 
-// Alterar quantidade
 window.alterarQuantidade = function(idItem, delta) {
   const item = appState.itens.find(i => i.id === idItem);
   if (!item) return;
 
-  const novaQtd = (Number(item.quantidade) || 1) + delta;
-  if (novaQtd <= 0) {
+  const nova = (Number(item.quantidade) || 1) + delta;
+  if (nova <= 0) {
     if (confirm(`Remover "${item.produto}" da lista?`)) {
       appState.itens = appState.itens.filter(i => i.id !== idItem);
       window.SomMercado.bipDesmarcar();
     }
   } else {
-    item.quantidade = Math.round(novaQtd * 10) / 10;
+    item.quantidade = Math.round(nova * 10) / 10;
   }
   renderizarTudo();
 };
 
-// Adicionar produto rápido
 window.adicionarProdutoRapido = function(idProduto) {
   const p = appState.produtos.find(prod => prod.id === idProduto);
   if (!p) return;
 
-  // Se já existe na lista ativa, incrementa quantidade
   const existente = appState.itens.find(i => i.idLista === appState.listaAtivaId && i.produto.toLowerCase() === p.nome.toLowerCase());
   if (existente) {
     existente.quantidade += 1;
   } else {
     appState.itens.push({
-      id: 'item_' + Date.now() + Math.random().toString(36).substr(2, 4),
+      id: 'item_' + Date.now(),
       idLista: appState.listaAtivaId,
       produto: p.nome,
       categoria: p.categoria,
@@ -409,12 +670,10 @@ window.adicionarProdutoRapido = function(idProduto) {
       comprado: false
     });
   }
-
   window.SomMercado.bipItem();
   renderizarTudo();
 };
 
-// Filtro de Corredor
 window.filtrarCorredor = function(corredor, botao) {
   appState.corredorAtivo = corredor;
   document.querySelectorAll('.corredor-pill').forEach(p => p.classList.remove('ativo'));
@@ -422,9 +681,7 @@ window.filtrarCorredor = function(corredor, botao) {
   renderizarTelaCompras();
 };
 
-// ============================================================================
-// TECLADO NUMÉRICO RÁPIDO (MAQUININHA)
-// ============================================================================
+// Teclado Maquininha
 window.abrirTecladoPreco = function(idItem) {
   const item = appState.itens.find(i => i.id === idItem);
   if (!item) return;
@@ -441,35 +698,28 @@ window.abrirTecladoPreco = function(idItem) {
 };
 
 window.fecharTecladoPreco = function() {
-  const drawer = document.getElementById('drawerTeclado');
-  if (drawer) drawer.classList.remove('aberto');
+  document.getElementById('drawerTeclado')?.classList.remove('aberto');
   appState.itemSendoEditado = null;
 };
 
-window.digitoTeclado = function(digito) {
-  if (appState.valorTecladoBuffer === '0') {
-    appState.valorTecladoBuffer = String(digito);
-  } else if (appState.valorTecladoBuffer.length < 8) {
-    appState.valorTecladoBuffer += String(digito);
-  }
+window.digitoTeclado = function(d) {
+  if (appState.valorTecladoBuffer === '0') appState.valorTecladoBuffer = String(d);
+  else if (appState.valorTecladoBuffer.length < 8) appState.valorTecladoBuffer += String(d);
   atualizarDisplayTeclado();
   window.SomMercado.bipItem();
 };
 
 window.apagarTeclado = function() {
-  if (appState.valorTecladoBuffer.length > 1) {
-    appState.valorTecladoBuffer = appState.valorTecladoBuffer.slice(0, -1);
-  } else {
-    appState.valorTecladoBuffer = '0';
-  }
+  if (appState.valorTecladoBuffer.length > 1) appState.valorTecladoBuffer = appState.valorTecladoBuffer.slice(0, -1);
+  else appState.valorTecladoBuffer = '0';
   atualizarDisplayTeclado();
 };
 
 window.confirmarTecladoPreco = function() {
   if (appState.itemSendoEditado) {
-    const valorCentavos = parseInt(appState.valorTecladoBuffer, 10) || 0;
-    appState.itemSendoEditado.precoUnitario = valorCentavos / 100;
-    appState.itemSendoEditado.comprado = true; // Ao digitar o preço, já marca como no carrinho!
+    const cents = parseInt(appState.valorTecladoBuffer, 10) || 0;
+    appState.itemSendoEditado.precoUnitario = cents / 100;
+    appState.itemSendoEditado.comprado = true;
     window.SomMercado.bipItem();
   }
   fecharTecladoPreco();
@@ -479,17 +729,15 @@ window.confirmarTecladoPreco = function() {
 function atualizarDisplayTeclado() {
   const display = document.getElementById('tecladoValor');
   if (!display) return;
-  const centavos = parseInt(appState.valorTecladoBuffer, 10) || 0;
-  display.textContent = formatarMoeda(centavos / 100);
+  const cents = parseInt(appState.valorTecladoBuffer, 10) || 0;
+  display.textContent = formatarMoeda(cents / 100);
 }
 
-// ============================================================================
-// 🏁 MODAL FINALIZAR COMPRA COM SINAL SONORO (BIP CAIXA REGISTRADORA)
-// ============================================================================
+// Modal Finalizar Compras com Bip
 let formaPagamentoEscolhida = '💳 Crédito';
 
 window.abrirModalFinalizar = function() {
-  const totais = calcularTotaisLista();
+  const totais = calcularTotais();
   const modal = document.getElementById('modalRecibo');
   const totalDisplay = document.getElementById('reciboTotalVal');
   const qtdDisplay = document.getElementById('reciboQtdItens');
@@ -501,8 +749,7 @@ window.abrirModalFinalizar = function() {
 };
 
 window.fecharModalFinalizar = function() {
-  const modal = document.getElementById('modalRecibo');
-  if (modal) modal.classList.remove('aberto');
+  document.getElementById('modalRecibo')?.classList.remove('aberto');
 };
 
 window.selecionarFormaPagto = function(forma, botao) {
@@ -512,129 +759,58 @@ window.selecionarFormaPagto = function(forma, botao) {
 };
 
 window.confirmarFinalizarCompraDefinitivo = function() {
-  const totais = calcularTotaisLista();
+  const totais = calcularTotais();
   const lista = appState.listas.find(l => l.id === appState.listaAtivaId);
 
-  // 1. 🔔 TOCA O SINAL SONORO TRIUNFAL / BIP COMEMORATIVO
+  // 🔔 Toca sinal sonoro de sucesso triunfal
   window.SomMercado.bipFinalizarCompra();
 
-  // 2. Arquiva a lista atual no histórico
-  const compraFinalizada = {
+  const compra = {
     id: 'compra_' + Date.now(),
     nomeLista: lista?.nome || 'Compras de Supermercado',
     data: new Date().toISOString(),
     total: totais.totalCarrinho,
     totalItens: totais.itensComprados,
     formaPagamento: formaPagamentoEscolhida,
+    responsavel: appState.perfil.nome,
     itens: appState.itens.filter(i => i.idLista === appState.listaAtivaId && i.comprado)
   };
 
-  appState.historico.unshift(compraFinalizada);
+  appState.historico.unshift(compra);
   if (lista) {
     lista.status = 'FECHADA';
     lista.dataFechamento = new Date().toISOString();
   }
 
-  // 3. Sincroniza em segundo plano com o Google Apps Script & Meu Financeiro
-  sincronizarComBackend(compraFinalizada);
-
-  // 4. Cria uma nova lista limpa para a próxima compra
-  const novaListaId = 'lst_' + Date.now();
+  // Cria nova lista limpa
+  const novaId = 'lst_' + Date.now();
   appState.listas.unshift({
-    id: novaListaId,
+    id: novaId,
     nome: 'Próxima Compra',
     status: 'ABERTA',
     dataCriacao: new Date().toISOString(),
     orcamentoMeta: lista?.orcamentoMeta || 350.00
   });
-  appState.listaAtivaId = novaListaId;
+  appState.listaAtivaId = novaId;
 
   fecharModalFinalizar();
   renderizarTudo();
 
-  alert(`🎉 Compras finalizadas com sucesso!\n\nTotal: ${formatarMoeda(compraFinalizada.total)}\nForma: ${compraFinalizada.formaPagamento}\n\nOs dados foram arquivados e enviados para o seu ecossistema!`);
+  alert(`🎉 Compras finalizadas com sucesso!\n\nResponsável: ${compra.responsavel}\nTotal: ${formatarMoeda(compra.total)}\nPagamento: ${compra.formaPagamento}\n\nDados salvos e integrados ao Meu Financeiro!`);
 };
 
-// Sincronização em segundo plano com Google Apps Script
-async function sincronizarComBackend(compra) {
-  try {
-    console.log('Sincronizando compra com Google Sheets & Financeiro...', compra);
-    // Dispara webhook se configurado
-    if (CONFIG.GAS_WEBAPP_URL) {
-      fetch(`${CONFIG.GAS_WEBAPP_URL}?api=sincronizar`, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(compra)
-      }).catch(err => console.log('Sync offline:', err));
-    }
-  } catch (e) {
-    console.log('Sincronização em background finalizada:', e);
-  }
+function formatarMoeda(val) {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(val) || 0);
 }
 
 // ============================================================================
-// COMANDO DE VOZ INTEGRADO (NATIVO)
-// ============================================================================
-window.iniciarVozNativa = function() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    alert('Comando de voz não suportado neste navegador. Use o Chrome no celular.');
-    return;
-  }
-
-  const recognition = new SpeechRecognition();
-  recognition.lang = 'pt-BR';
-  recognition.continuous = false;
-
-  window.SomMercado.bipItem();
-  const btn = document.getElementById('btnVozTopo');
-  if (btn) btn.style.background = '#ef4444';
-
-  recognition.onresult = function(event) {
-    const texto = event.results[0][0].transcript;
-    processarVoz(texto);
-  };
-
-  recognition.onend = function() {
-    if (btn) btn.style.background = '';
-  };
-
-  recognition.start();
-};
-
-function processarVoz(frase) {
-  console.log('Comando de voz capturado:', frase);
-  // Adiciona o produto falado diretamente à lista
-  appState.itens.push({
-    id: 'voz_' + Date.now(),
-    idLista: appState.listaAtivaId,
-    produto: frase.charAt(0).toUpperCase() + frase.slice(1),
-    categoria: '📦 Outros',
-    quantidade: 1,
-    precoUnitario: 0,
-    comprado: false
-  });
-  window.SomMercado.bipItem();
-  renderizarTudo();
-  alert(`🎙️ Item adicionado via voz: "${frase}"`);
-}
-
-// ============================================================================
-// FORMATADORES
-// ============================================================================
-function formatarMoeda(valor) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor) || 0);
-}
-
-// ============================================================================
-// INICIALIZAÇÃO AO CARREGAR
+// INICIALIZAÇÃO
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   carregarLocal();
+  aplicarTemaInicial();
   renderizarTudo();
 
-  // Registrar Service Worker para PWA Offline
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW:', err));
   }
