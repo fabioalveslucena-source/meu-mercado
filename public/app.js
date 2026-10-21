@@ -883,60 +883,91 @@ window.fecharModalVozCompleta = function() {
   document.getElementById('modalVozCompleta')?.classList.remove('aberto');
 };
 
+// ============================================================================
+// 🎙️ FUNÇÕES DE NORMALIZAÇÃO & PARSER DE VOZ EM PORTUGUÊS
+// ============================================================================
+function normalizarTextoFala(texto) {
+  let s = String(texto || '').toLowerCase().trim();
+  s = s.replace(/[?!;]/g, ' ');
+  s = s.replace(/\bvirgula\b|\bvírgula\b/gi, ' ');
+  s = s.replace(/(\d+),(\d+)/g, '$1.$2');
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+function converterFalaParaDecimais(frase) {
+  // Transforma expressões como "5 e 70" em "5.70"
+  let res = frase.replace(/\b(\d+)\s+e\s+(\d{1,2})\b/g, (match, intP, decP) => {
+    return `${intP}.${decP.padEnd(2, '0')}`;
+  });
+
+  // Transforma extenso "cinco e setenta" -> "5.70"
+  for (let decNome of ['dez', 'vinte', 'trinta', 'quarenta', 'cinquenta', 'sessenta', 'setenta', 'oitenta', 'noventa']) {
+    for (let intNome in PALAVRAS_NUMEROS) {
+      let regExt = new RegExp(`\\b${intNome}\\s+e\\s+${decNome}\\b`, 'g');
+      if (regExt.test(res)) {
+        let intVal = PALAVRAS_NUMEROS[intNome];
+        let decVal = PALAVRAS_NUMEROS[decNome];
+        res = res.replace(regExt, `${intVal}.${String(decVal).padStart(2, '0')}`);
+      }
+    }
+  }
+
+  return res;
+}
+
 /**
  * Interpretador Robusto de Frases Completas em Português:
  * "Creme de leite, quatro, 2,70 cada" -> { nome: 'Creme de leite', quantidade: 4, precoUnitario: 2.70 }
  * "Arroz branco, dois a 29,90" -> { nome: 'Arroz branco 5 kg', quantidade: 2, precoUnitario: 29.90 }
  * "Leite condensado 3 por 6,50"
  */
-function interpretarFalaItemCompleto(frase) {
-  let limpa = frase.replace(/[?!]/g, ' ').replace(/\s+/g, ' ').trim();
-  limpa = limpa.replace(/^(adicionar|coloque|comprar|colocar|quero|bota)\s+/i, '').trim();
-
-  // Substitui vírgula decimal (ex: 2,70 -> 2.70) para não quebrar no split
-  limpa = limpa.replace(/(\d+),(\d+)/g, '$1.$2');
+function interpretarFalaItemCompleto(fraseOriginal) {
+  let frase = normalizarTextoFala(fraseOriginal);
+  frase = converterFalaParaDecimais(frase);
+  frase = frase.replace(/^(adicionar|coloque|comprar|colocar|quero|bota)\s+/i, '').trim();
 
   let nomeProduto = '';
   let quantidade = 1;
   let preco = 0;
 
-  // 1. Tenta separar por vírgulas ou ponto e vírgula
-  let partes = limpa.split(/[,;]/).map(p => p.trim()).filter(p => p.length > 0);
+  // 1. Procura se tem um preço decimal evidente (ex: "2.70" ou "29.90")
+  let mPreco = frase.match(/\b(\d+\.\d{1,2})\b/);
+  if (mPreco) {
+    preco = parseFloat(mPreco[1]);
+    let textoAntesPreco = frase.substring(0, mPreco.index).trim();
+    // Limpa apenas conectores 'a', 'por', 'custando' ou 'de' que precede número
+    textoAntesPreco = textoAntesPreco.replace(/[,;]/g, ' ').replace(/\b(?:a|por|custando)\b/gi, ' ').replace(/\s+de\s*$/i, ' ').trim();
 
-  if (partes.length >= 3) {
-    nomeProduto = partes[0];
-    quantidade = extrairApenasNumero(partes[1]);
-    preco = extrairPrecoDeTexto(partes[2]);
-  } else if (partes.length === 2) {
-    nomeProduto = partes[0];
-    let segParte = partes[1];
-    let mQtdPreco = segParte.match(/^(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\s*(?:unidades?|un|caixas?|latas?|pct)?\s*(?:a|por|de)?\s*(\d+(?:\.\d{1,2})?)\s*(?:reais|cada)?$/i);
-    if (mQtdPreco) {
-      quantidade = converterNumeroOuExtenso(mQtdPreco[1]);
-      preco = converterPrecoString(mQtdPreco[2]);
+    // Procura quantidade no final de textoAntesPreco
+    let mQtd = textoAntesPreco.match(/\b(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez|doze)\s*(?:unidades?|un|caixas?|latas?|pct)?$/i);
+    if (mQtd) {
+      let qStr = mQtd[1].toLowerCase();
+      quantidade = PALAVRAS_NUMEROS[qStr] !== undefined ? PALAVRAS_NUMEROS[qStr] : (parseFloat(qStr) || 1);
+      nomeProduto = textoAntesPreco.substring(0, mQtd.index).trim();
     } else {
-      preco = extrairPrecoDeTexto(segParte);
-      if (preco === 0) {
-        quantidade = extrairApenasNumero(segParte);
-      }
+      nomeProduto = textoAntesPreco;
     }
   } else {
-    // Frase contínua sem vírgulas: "creme de leite quatro 2.70 cada" ou "arroz dois a 29.90"
-    let mQtdPrecoFinal = limpa.match(/\b(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\s*(?:unidades?|un|caixas?|latas?|pct)?\s*(?:a|por|de)?\s*(\d+(?:\.\d{1,2})?)\s*(?:reais|cada)?$/i);
-    if (mQtdPrecoFinal) {
-      quantidade = converterNumeroOuExtenso(mQtdPrecoFinal[1]);
-      preco = converterPrecoString(mQtdPrecoFinal[2]);
-      nomeProduto = limpa.substring(0, mQtdPrecoFinal.index).trim();
+    // Sem ponto decimal
+    let partes = frase.split(/[,;]/).map(p => p.trim()).filter(p => p.length > 0);
+    if (partes.length >= 3) {
+      nomeProduto = partes[0];
+      let q = partes[1].toLowerCase().replace(/\b(?:unidades?|un|caixas?|latas?|pct)\b/gi, '').trim();
+      quantidade = PALAVRAS_NUMEROS[q] !== undefined ? PALAVRAS_NUMEROS[q] : (parseFloat(q) || 1);
+      let p = partes[2].replace(/\b(?:reais|cada)\b/gi, '').trim();
+      preco = parseFloat(p) || 0;
+    } else if (partes.length === 2) {
+      nomeProduto = partes[0];
+      let dados = interpretarFalaItemNoMercado(partes[1], null);
+      quantidade = dados.quantidade || 1;
+      preco = dados.preco || 0;
     } else {
-      let mPrecoSo = limpa.match(/\b(\d+(?:\.\d{1,2})?)\s*(?:reais|cada)?$/i);
-      if (mPrecoSo) {
-        preco = converterPrecoString(mPrecoSo[1]);
-        nomeProduto = limpa.substring(0, mPrecoSo.index).trim();
-      } else {
-        nomeProduto = limpa;
-      }
+      nomeProduto = frase;
     }
   }
+
+  nomeProduto = nomeProduto.replace(/[,;]/g, ' ').replace(/\s+/g, ' ').trim();
 
   let achado = buscarNoCatalogo(nomeProduto);
   if (preco === 0 && achado.precoMedio) {
@@ -952,7 +983,7 @@ function interpretarFalaItemCompleto(frase) {
 }
 
 // ============================================================================
-// 🎙️ MODAL 2: VOZ DO ITEM NO SUPERMERCADO ("Sete, 5,70", "7 a 5,70")
+// 🎙️ MODAL 2: VOZ DO ITEM NO SUPERMERCADO ("Sete, 5,70", "3, 5 e 70 cada")
 // ============================================================================
 window.ouvirVozItemSupermercado = function(idItem) {
   const item = appState.itens.find(i => i.id === idItem);
@@ -1006,7 +1037,7 @@ window.ouvirVozItemSupermercado = function(idItem) {
       if (dadosItemOuvidoDetectados && dadosItemOuvidoDetectados.preco > 0) {
         confirmarVozItemRapido();
       }
-    }, 2000);
+    }, 2800);
   };
 
   recVozItemRapido.onerror = function(err) {
@@ -1060,18 +1091,20 @@ window.fecharModalVozItemRapido = function() {
 
 /**
  * Analisa as formas que o usuário fala no supermercado:
+ * - "três, cinco e setenta cada" -> qtd: 3, preco: 5.70
+ * - "três cinco e setenta cada" -> qtd: 3, preco: 5.70
  * - "Sete, 5,70" -> qtd: 7, preco: 5.70
  * - "7 a 5,70" -> qtd: 7, preco: 5.70
  * - "5,70" -> qtd: anterior, preco: 5.70
- * - "cinco e setenta" -> preco: 5.70
+ * - "cinco e setenta cada" -> preco: 5.70
  * - Anomalia Google "75 70" -> detecta 7 unidades a 5,70!
  */
 function interpretarFalaItemNoMercado(texto, itemAtual) {
-  let frase = String(texto || '').toLowerCase().trim();
-  frase = frase.replace(/[?!]/g, ' ').replace(/\s+/g, ' ');
+  let frase = normalizarTextoFala(texto);
+  frase = converterFalaParaDecimais(frase);
 
-  // Normaliza vírgula decimal (ex: 5,70 -> 5.70)
-  frase = frase.replace(/(\d+),(\d+)/g, '$1.$2');
+  // Remove sufixos comuns de supermercado (cada, reais, etc)
+  frase = frase.replace(/\b(?:cada|reais|real|unidades?|un|caixas?|latas?|pct|pacotes?)\b/gi, ' ').replace(/\s+/g, ' ').trim();
 
   let quantidade = (itemAtual && itemAtual.quantidade) ? itemAtual.quantidade : 1;
   let preco = 0;
@@ -1084,54 +1117,29 @@ function interpretarFalaItemNoMercado(texto, itemAtual) {
     return { quantidade, preco };
   }
 
-  // 2. Padrão explícito: "7 a 5.70" ou "7 por 5.70" ou "7 unidades a 5.70"
-  let m1 = frase.match(/^(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez|doze)\s*(?:unidades?|un|caixas?|latas?|pct)?\s*(?:a|por|de)\s*(\d+(?:\.\d{1,2})?)\s*(?:reais|cada)?/i);
-  if (m1) {
-    quantidade = converterNumeroOuExtenso(m1[1]);
-    preco = converterPrecoString(m1[2]);
-    return { quantidade, preco };
-  }
-
-  // 3. Padrão com vírgula ou pausa e PREÇO DECIMAL COM PONTO: "7, 5.70" ou "sete, 5.70"
-  let m2 = frase.match(/^(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez|doze)\s*(?:unidades?|un|caixas?|latas?|pct)?\s*[,;\s]+\s*(\d+\.\d{1,2})\s*(?:reais|cada)?/i);
-  if (m2) {
-    quantidade = converterNumeroOuExtenso(m2[1]);
-    preco = converterPrecoString(m2[2]);
-    return { quantidade, preco };
-  }
-
-  // 4. Fala por extenso "cinco e setenta" ou "sete cinco e setenta"
-  let mExtDuplo = frase.match(/^(\w+)\s+(\w+)\s+e\s+(\w+)$/);
-  if (mExtDuplo && PALAVRAS_NUMEROS[mExtDuplo[1]] && PALAVRAS_NUMEROS[mExtDuplo[2]] && PALAVRAS_NUMEROS[mExtDuplo[3]]) {
-    quantidade = PALAVRAS_NUMEROS[mExtDuplo[1]];
-    preco = PALAVRAS_NUMEROS[mExtDuplo[2]] + (PALAVRAS_NUMEROS[mExtDuplo[3]] / 100);
-    return { quantidade, preco };
-  }
-
-  let mExt = frase.match(/^(\w+)\s+e\s+(\w+)$/);
-  if (mExt && PALAVRAS_NUMEROS[mExt[1]] !== undefined && PALAVRAS_NUMEROS[mExt[2]] !== undefined) {
-    preco = PALAVRAS_NUMEROS[mExt[1]] + (PALAVRAS_NUMEROS[mExt[2]] / 100);
-    return { quantidade, preco };
-  }
-
-  // 5. Apenas preço unitário com ponto decimal: "5.70"
-  let mPreco = frase.match(/(\d+)\.(\d{1,2})/);
-  if (mPreco) {
-    preco = parseFloat(`${mPreco[1]}.${mPreco[2].padEnd(2, '0')}`);
-    let partesAntes = frase.split(mPreco[0])[0].trim();
-    if (partesAntes) {
-      let mQtdAntes = partesAntes.match(/\b(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b/i);
-      if (mQtdAntes) {
-        quantidade = converterNumeroOuExtenso(mQtdAntes[1]);
-      }
+  // 2. Preço com ponto decimal: ex: "3 5.70", "7 5.70", "5.70", "três 5.70"
+  let mDec = frase.match(/\b(\d+\.\d{1,2})\b/);
+  if (mDec) {
+    preco = parseFloat(mDec[1]);
+    let textoAntes = frase.substring(0, mDec.index).replace(/[,a-z]/gi, ' ').trim();
+    let mQtdAntes = frase.substring(0, mDec.index).match(/\b(\d+|um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez|doze)\b/i);
+    if (mQtdAntes) {
+      let q = mQtdAntes[1].toLowerCase();
+      quantidade = PALAVRAS_NUMEROS[q] !== undefined ? PALAVRAS_NUMEROS[q] : (parseFloat(q) || 1);
     }
     return { quantidade, preco };
   }
 
-  // 6. Preço inteiro: "cinco reais" ou "5 reais"
-  let mInt = frase.match(/(\d+)\s*(?:reais|real)/i);
-  if (mInt) {
-    preco = parseFloat(mInt[1]);
+  // 3. Preço número inteiro: ex: "cinco reais" ou "5"
+  let mNum = frase.match(/\b(\d+)\b/);
+  if (mNum) {
+    preco = parseFloat(mNum[1]);
+    return { quantidade, preco };
+  }
+
+  let mExtSimples = frase.match(/\b(um|uma|dois|duas|tres|três|quatro|cinco|seis|sete|oito|nove|dez)\b/i);
+  if (mExtSimples) {
+    preco = PALAVRAS_NUMEROS[mExtSimples[1].toLowerCase()] || 0;
     return { quantidade, preco };
   }
 
