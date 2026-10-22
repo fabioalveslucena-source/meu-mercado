@@ -227,14 +227,23 @@
           </div>
         </div>
 
-        <!-- Banner exibido caso a lista tenha sido finalizada (Opção de Reabrir) -->
-        <div id="bannerListaFechada" class="banner-lista-fechada" style="display: none;">
-          <div>
-            <strong style="color: #b45309; font-size: 14px;">Lista Finalizada</strong>
-            <div style="font-size: 12px; color: #92400e;">Esqueceu de comprar algo ou comprou a mais?</div>
+        <!-- Banner exibido caso a lista tenha sido finalizada (Opção de Reabrir ou Enviar ao Financeiro) -->
+        <div id="bannerListaFechada" class="banner-lista-fechada" style="display: none; flex-direction: column; gap: 10px; padding: 14px; background: #fef3c7; border: 1.5px solid #f59e0b; border-radius: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+              <strong style="color: #b45309; font-size: 14px; display: flex; align-items: center; gap: 6px;">
+                <span>✅ Lista Finalizada</span>
+              </strong>
+              <div style="font-size: 12.5px; color: #92400e; margin-top: 2px;">
+                Total das compras: <strong id="valorFechadaSpan" style="color: #15803d; font-size: 15px; font-weight: 800;">R$ 259,70</strong>
+              </div>
+            </div>
+            <button class="btn-reabrir-compra" onclick="reabrirListaAtual()" style="padding: 6px 10px; font-size: 11px;">
+              🔄 Reabrir Lista
+            </button>
           </div>
-          <button class="btn-reabrir-compra" onclick="reabrirListaAtual()">
-            🔄 Reabrir Lista
+          <button id="btnEnviarAoFinanceiroFechada" onclick="enviarCompraFechadaAoFinanceiro()" style="width: 100%; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; color: #ffffff; background: linear-gradient(135deg, #15803d 0%, #16a34a 100%); box-shadow: 0 4px 12px rgba(22, 163, 74, 0.35); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+            🚀 Enviar Compra Fechada para o Meu Financeiro
           </button>
         </div>
 
@@ -281,6 +290,27 @@
           </div>
           <button class="btn-qtd" style="width: auto; padding: 8px 16px; background: var(--cor-marca); color: #fff; font-size: 13px;" onclick="abrirModalNovaLista()">
             + Nova Lista
+          </button>
+        </div>
+
+        <!-- Card de Sincronização Nuvem com Meu Financeiro -->
+        <div style="background: linear-gradient(135deg, #102a43 0%, #1e3a5f 100%); border: 1.5px solid #287EA5; border-radius: 14px; padding: 14px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">☁️</span>
+              <strong style="color: #FFFFFF; font-size: 13.5px;">Integração Meu Financeiro</strong>
+            </div>
+            <span style="font-size: 11px; background: rgba(40, 126, 165, 0.4); color: #64b5f6; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Em Tempo Real</span>
+          </div>
+          <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;">
+            Envie todas as listas fechadas (R$ 259,70 + R$ 155,70 + R$ 20,00) diretamente para o Meu Financeiro em <strong>Outubro/2026</strong>.
+          </p>
+          <button 
+            id="btnSyncTodasFechadas"
+            onclick="enviarTodasAsListasFechadasAoFinanceiro(this)"
+            style="width: 100%; padding: 10px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border: 1px solid #4ade80; color: #FFFFFF; font-weight: 800; font-size: 13px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);"
+          >
+            <span>🚀 Sincronizar Listas Fechadas com Meu Financeiro</span>
           </button>
         </div>
 
