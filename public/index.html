@@ -44,7 +44,7 @@
           <span class="marca-icone">🛒</span>
           <div class="marca-titulos">
             <span class="marca-nome">Meu Mercado</span>
-            <span class="marca-sub">Nuvem Direta • v3.2</span>
+            <span class="marca-sub">Nuvem Direta • v3.3</span>
           </div>
         </div>
       </div>
@@ -317,6 +317,19 @@
             style="width: 100%; padding: 10px; background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); border: 1px solid #4ade80; color: #FFFFFF; font-weight: 800; font-size: 13px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);"
           >
             <span>🚀 Sincronizar Listas Fechadas com Meu Financeiro</span>
+          </button>
+        </div>
+
+        <!-- Filtro de Abas: Listas Abertas vs Listas Fechadas (Histórico) -->
+        <div style="display: flex; gap: 8px; margin-bottom: 14px; background: rgba(0,0,0,0.06); padding: 4px; border-radius: 12px;">
+          <button id="btnAbaListasAbertas" class="corredor-pill ativo" style="flex: 1; text-align: center; padding: 8px 10px; font-weight: 800; font-size: 13px; border-radius: 9px;" onclick="filtrarAbaListas('abertas', this)">
+            📋 Abertas (<span id="contListasAbertas">0</span>)
+          </button>
+          <button id="btnAbaListasFechadas" class="corredor-pill" style="flex: 1; text-align: center; padding: 8px 10px; font-weight: 800; font-size: 13px; border-radius: 9px;" onclick="filtrarAbaListas('fechadas', this)">
+            🔒 Fechadas / Histórico (<span id="contListasFechadas">0</span>)
+          </button>
+          <button id="btnAbaListasTodas" class="corredor-pill" style="padding: 8px 10px; font-weight: 800; font-size: 13px; border-radius: 9px;" onclick="filtrarAbaListas('todas', this)">
+            Todas
           </button>
         </div>
 
@@ -787,7 +800,7 @@
       if ('caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
-            if (name !== 'meu-mercado-v8-live') {
+            if (name !== 'meu-mercado-v9-live') {
               caches.delete(name);
             }
           }
@@ -795,7 +808,7 @@
       }
     }
   </script>
-  <script src="/audio.js?v=20261023_v8"></script>
-  <script src="/app.js?v=20261023_v8"></script>
+  <script src="/audio.js?v=20261023_v9"></script>
+  <script src="/app.js?v=20261023_v9"></script>
 </body>
 </html>

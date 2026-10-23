@@ -1423,13 +1423,59 @@ window.filtrarCorredor = function(corredor, botao) {
 };
 
 // ============================================================================
-// GESTÃO DE LISTAS (SELECIONAR, CRIAR, EXCLUIR, REABRIR)
+// GESTÃO DE LISTAS (SELECIONAR, CRIAR, EXCLUIR, REABRIR, ABAS ABERTAS/FECHADAS)
 // ============================================================================
+let abaListasFiltro = 'abertas'; // 'abertas' | 'fechadas' | 'todas'
+
+window.filtrarAbaListas = function(aba, botao) {
+  abaListasFiltro = aba;
+  document.querySelectorAll('#telaListas .corredor-pill').forEach(b => b.classList.remove('ativo'));
+  if (botao) {
+    botao.classList.add('ativo');
+  } else {
+    if (aba === 'abertas') document.getElementById('btnAbaListasAbertas')?.classList.add('ativo');
+    if (aba === 'fechadas') document.getElementById('btnAbaListasFechadas')?.classList.add('ativo');
+    if (aba === 'todas') document.getElementById('btnAbaListasTodas')?.classList.add('ativo');
+  }
+  renderizarTelaListas();
+};
+
 function renderizarTelaListas() {
   const container = document.getElementById('containerListas');
   if (!container) return;
 
-  container.innerHTML = appState.listas.map(lista => {
+  const abertas = appState.listas.filter(l => l.status !== 'FECHADA');
+  const fechadas = appState.listas.filter(l => l.status === 'FECHADA');
+
+  const badgeAbertas = document.getElementById('contListasAbertas');
+  const badgeFechadas = document.getElementById('contListasFechadas');
+  if (badgeAbertas) badgeAbertas.textContent = abertas.length;
+  if (badgeFechadas) badgeFechadas.textContent = fechadas.length;
+
+  let listasParaExibir = appState.listas;
+  if (abaListasFiltro === 'abertas') {
+    listasParaExibir = abertas;
+  } else if (abaListasFiltro === 'fechadas') {
+    listasParaExibir = fechadas;
+  }
+
+  if (listasParaExibir.length === 0) {
+    const isFechadas = abaListasFiltro === 'fechadas';
+    container.innerHTML = `
+      <div style="text-align: center; padding: 40px 20px; color: var(--texto-secundario); background: var(--bg-card); border-radius: 14px; border: 1px dashed var(--borda-padrao);">
+        <div style="font-size: 38px; margin-bottom: 8px;">${isFechadas ? '🔒' : '📋'}</div>
+        <strong style="font-size: 15px; color: var(--texto-principal);">
+          ${isFechadas ? 'Nenhuma lista fechada no histórico' : 'Nenhuma lista aberta no momento'}
+        </strong>
+        <p style="font-size: 12.5px; margin-top: 4px;">
+          ${isFechadas ? 'Quando você finalizar uma compra no mercado, ela ficará arquivada aqui.' : 'Toque em "+ Nova Lista" acima para criar sua primeira lista de compras.'}
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = listasParaExibir.map(lista => {
     const t = calcularTotais(lista.id);
     const estaAtiva = lista.id === appState.listaAtivaId;
     const dataObj = new Date(lista.dataCriacao);
@@ -2435,7 +2481,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderizarTudo();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261023_v8').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261023_v9').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }
