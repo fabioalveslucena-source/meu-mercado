@@ -1627,26 +1627,129 @@ window.reabrirListaAtual = function() {
 };
 
 // ============================================================================
-// FINALIZAR COMPRAS (RECIBO + BIP + PARCELAMENTO CRÉDITO)
+// FINALIZAR COMPRAS (TRATAMENTO DE PENDENTES + RECIBO + BIP + PARCELAMENTO)
 // ============================================================================
 let formaPagamentoEscolhida = '💳 Crédito';
 
 window.abrirModalFinalizar = function() {
+  const itensLista = appState.itens.filter(i => i.idLista === appState.listaAtivaId);
+  const itensPendentes = itensLista.filter(i => !i.comprado);
+
+  // Se houver itens não ticados, abre o modal de decisão inteligente
+  if (itensPendentes.length > 0) {
+    abrirModalPendentes(itensPendentes);
+    return;
+  }
+
+  // Se todos já estão marcados ou não há itens, vai direto para o recibo de pagamento
+  abrirModalReciboDireto();
+};
+
+window.abrirModalPendentes = function(itensPendentes) {
+  const modal = document.getElementById('modalItensPendentesFinalizar');
+  const preview = document.getElementById('listaItensPendentesPreview');
+  const sub = document.getElementById('txtSubPendentes');
+  if (!modal) return;
+
+  const listaAtual = appState.listas.find(l => l.id === appState.listaAtivaId);
+  if (sub) {
+    sub.textContent = `${itensPendentes.length} produto(s) não foram marcados em "${listaAtual?.nome || 'Minha Lista'}"`;
+  }
+
+  if (preview) {
+    preview.innerHTML = itensPendentes.map(item => `
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.06); padding: 7px 10px; border-radius: 8px; font-size: 13px; border: 1px solid rgba(0,0,0,0.08);">
+        <span style="font-weight: 600; color: var(--texto-principal);">
+          ${item.produto || item.nome} <small style="color: var(--texto-suave);">(${item.quantidade || 1} un • ${item.categoria || 'Geral'})</small>
+        </span>
+        <button onclick="excluirItemPendenteIndividual('${item.id}')" style="background: none; border: none; font-size: 15px; cursor: pointer; padding: 2px 6px;" title="Excluir este item agora">
+          🗑️
+        </button>
+      </div>
+    `).join('');
+  }
+
+  modal.classList.add('aberto');
+};
+
+window.fecharModalPendentes = function() {
+  document.getElementById('modalItensPendentesFinalizar')?.classList.remove('aberto');
+};
+
+window.excluirItemPendenteIndividual = function(idItem) {
+  appState.itens = appState.itens.filter(i => i.id !== idItem);
+  salvarLocal();
+  renderizarTudo();
+
+  const itensRestantes = appState.itens.filter(i => i.idLista === appState.listaAtivaId && !i.comprado);
+  if (itensRestantes.length === 0) {
+    fecharModalPendentes();
+    abrirModalReciboDireto();
+  } else {
+    abrirModalPendentes(itensRestantes);
+  }
+};
+
+window.tratarPendentesMoverNovaLista = function() {
+  const listaAtual = appState.listas.find(l => l.id === appState.listaAtivaId);
+  const itensPendentes = appState.itens.filter(i => i.idLista === appState.listaAtivaId && !i.comprado);
+
+  if (itensPendentes.length > 0) {
+    const nomeBase = listaAtual?.nome ? `${listaAtual.nome} - Pendentes` : 'Compras - Itens Pendentes';
+    const novaListaId = 'lst_' + Date.now();
+
+    const novaLista = {
+      id: novaListaId,
+      nome: nomeBase,
+      status: 'ABERTA',
+      dataCriacao: new Date().toISOString(),
+      orcamentoMeta: itensPendentes.reduce((acc, it) => acc + ((Number(it.quantidade) || 1) * (Number(it.precoUnitario) || 0)), 0) || 100.00
+    };
+
+    appState.listas.unshift(novaLista);
+
+    itensPendentes.forEach(it => {
+      it.idLista = novaListaId;
+      it.comprado = false;
+    });
+
+    salvarLocal();
+    renderizarTudo();
+  }
+
+  fecharModalPendentes();
+  abrirModalReciboDireto();
+};
+
+window.tratarPendentesExcluirDefinitivo = function() {
+  if (confirm('Tem certeza que deseja excluir todos os itens não marcados desta compra?')) {
+    appState.itens = appState.itens.filter(i => !(i.idLista === appState.listaAtivaId && !i.comprado));
+    salvarLocal();
+    renderizarTudo();
+
+    fecharModalPendentes();
+    abrirModalReciboDireto();
+  }
+};
+
+window.tratarPendentesMarcarTodosComprados = function() {
+  appState.itens.filter(i => i.idLista === appState.listaAtivaId).forEach(i => i.comprado = true);
+  salvarLocal();
+  renderizarTudo();
+
+  fecharModalPendentes();
+  abrirModalReciboDireto();
+};
+
+window.abrirModalReciboDireto = function() {
   const modal = document.getElementById('modalRecibo');
   const totalInput = document.getElementById('reciboTotalInput');
   const totalDisplay = document.getElementById('reciboTotalVal');
   const qtdDisplay = document.getElementById('reciboQtdItens');
 
-  // Se nenhum item foi marcado como comprado ainda, mas a lista tem itens,
-  // marca automaticamente todos os itens da lista como comprados
-  let itensLista = appState.itens.filter(i => i.idLista === appState.listaAtivaId);
-  const temComprados = itensLista.some(i => i.comprado);
-  if (!temComprados && itensLista.length > 0) {
-    itensLista.forEach(i => i.comprado = true);
-    salvarLocal();
-  }
-
+  const itensComprados = appState.itens.filter(i => i.idLista === appState.listaAtivaId && i.comprado);
   const totais = calcularTotais();
+
   let totalSugerido = totais.totalCarrinho > 0
     ? totais.totalCarrinho
     : (totais.totalEstimado > 0 ? totais.totalEstimado : (totais.meta || 50.00));
@@ -1654,8 +1757,7 @@ window.abrirModalFinalizar = function() {
   if (totalInput) totalInput.value = totalSugerido.toFixed(2);
   if (totalDisplay) totalDisplay.textContent = formatarMoeda(totalSugerido);
   if (qtdDisplay) {
-    const comprados = itensLista.filter(i => i.comprado).length;
-    qtdDisplay.textContent = `${comprados} itens comprados de ${itensLista.length}`;
+    qtdDisplay.textContent = `${itensComprados.length} item(ns) comprado(s)`;
   }
 
   atualizarOpcoesParcelamento(totalSugerido);

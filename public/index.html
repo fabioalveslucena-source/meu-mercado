@@ -425,6 +425,50 @@
     </div>
 
     <!-- ==================================================================
+         MODAL ITENS PENDENTES ANTES DE FINALIZAR
+    =================================================================== -->
+    <div id="modalItensPendentesFinalizar" class="modal-overlay">
+      <div class="modal-card" style="max-height: 90vh; overflow-y: auto;">
+        <div class="recibo-topo">
+          <div class="recibo-icone">⚠️</div>
+          <div class="recibo-titulo">Itens Pendentes</div>
+          <div id="txtSubPendentes" class="recibo-sub">Você tem produtos não marcados no carrinho</div>
+        </div>
+
+        <div style="background: rgba(245, 158, 11, 0.12); border: 1.5px solid rgba(245, 158, 11, 0.35); border-radius: 12px; padding: 12px; margin: 12px 0;">
+          <div style="font-size: 12.5px; font-weight: 700; color: #b45309; margin-bottom: 8px;">
+            📋 Produtos que ficaram sem marcar:
+          </div>
+          <div id="listaItensPendentesPreview" style="max-height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+            <!-- Itens pendentes gerados dinamicamente com lixeira individual -->
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <!-- Opção 1: Mover para lista de Pendentes -->
+          <button class="btn-confirmar-finalizar" onclick="tratarPendentesMoverNovaLista()" style="background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);">
+            <span>📦 Mover para "Compras - Itens Pendentes" e Finalizar</span>
+          </button>
+
+          <!-- Opção 2: Descartar / Excluir pendentes -->
+          <button class="btn-confirmar-finalizar" onclick="tratarPendentesExcluirDefinitivo()" style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);">
+            <span>🗑️ Descartar/Excluir Pendentes e Finalizar</span>
+          </button>
+
+          <!-- Opção 3: Marcar todos como comprados -->
+          <button class="btn-confirmar-finalizar" onclick="tratarPendentesMarcarTodosComprados()" style="background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);">
+            <span>✅ Comprei Tudo (Marcar todos e Finalizar)</span>
+          </button>
+
+          <!-- Opção 4: Voltar e revisar -->
+          <button class="btn-cancelar-modal" onclick="fecharModalPendentes()">
+            🔍 Voltar e Revisar a Lista
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
          MODAL RECIBO DIGITAL (FINALIZAR COMPRA + BIP DE SUCESSO)
     =================================================================== -->
     <div id="modalRecibo" class="modal-overlay">
