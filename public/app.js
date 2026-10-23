@@ -467,15 +467,56 @@ function ehComandoVozSalvarLista(texto) {
          /\b(salvar lista|salve a lista|enviar lista|envie a lista|concluir lista|finalizar lista|gerar lista)\b/i.test(limpo);
 }
 
+function ehFalaConversacional(texto) {
+  if (!texto) return true;
+  const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+
+  // Frases muito curtas ou irrelevantes
+  if (t.length < 2) return true;
+
+  // Se for um produto conhecido básico, NUNCA é conversacional
+  if (/^(tomate|cebola|alho|batata|cenoura|banana|maca|laranja|alface|sal|acucar|arroz|feijao|oleo|azeite|cafe|leite|queijo|manteiga|requeijao|iogurte|carne|frango|linguica|bacon|sabao|detergente|amaciante|desinfetante|sabonete|shampoo|pao|ovos|macarrao)s?$/i.test(t)) {
+    return false;
+  }
+
+  // Palavras-chave claramente conversacionais/metalinguísticas (microfone, sistema, conversa)
+  if (/\b(microfone|navegador|aplicativo|celular|sistema|codigo|exemplo|gravando|escrevendo|escreveu|falando|falei|disse|dizendo|conversando|olhando|vendo|testando|teste)\b/i.test(t)) {
+    return true;
+  }
+
+  // Estruturas de frases que indicam conversa e não lista de mercado
+  if (/\b(por exemplo|tudo que|o que|porque|por que|sera que|deixa eu ver|deixa ver|espera ai|espera um pouco|nao sei|acho que|estou vendo|esta aberto|esta fechado|nao e para|e para|isso ai)\b/i.test(t)) {
+    return true;
+  }
+
+  // Se tiver mais de 4 palavras e não contiver nenhum alimento conhecido nem indicador de quantidade
+  const palavras = t.split(/\s+/);
+  if (palavras.length >= 4) {
+    const temAlimento = /(arroz|feijao|leite|carne|frango|tomate|cebola|batata|fruta|oleo|azeite|cafe|acucar|sal|sabao|queijo|pao|ovos|detergente|manteiga|iogurte)/i.test(t);
+    const temQtd = /\b(\d+|um|uma|dois|duas|tres|quatro|cinco|quilo|kg|litro|pacote|caixa|unidade)s?\b/i.test(t);
+    if (!temAlimento && !temQtd) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function adicionarItensAoBuffer(fala) {
   let limpa = fala.replace(/[.?!]/g, ' ').toLowerCase().trim();
 
-  // Se a frase inteira for um comando para salvar ou enviar lista
+  // 1. Se for comando para salvar ou enviar lista
   if (ehComandoVozSalvarLista(limpa)) {
     console.log('🎙️ Comando de voz para salvar lista detectado:', limpa);
     pararDitadoContinuo();
     window.SomMercado.bipFinalizarCompra();
     window.concluirPreparacaoLista();
+    return;
+  }
+
+  // 2. Se a frase for ruído/conversa do usuário (ex: "o microfone por exemplo agora está aberto")
+  if (ehFalaConversacional(limpa)) {
+    console.log('🔇 Fala conversacional ignorada:', limpa);
     return;
   }
 
@@ -487,9 +528,15 @@ function adicionarItensAoBuffer(fala) {
       deveSalvarNoFinal = true;
       return;
     }
+    if (ehFalaConversacional(p)) {
+      console.log('🔇 Pedaço conversacional ignorado:', p);
+      return;
+    }
     const info = extrairProdutoEQuantidade(p);
-    itensDitadosBuffer.push(info);
-    window.SomMercado.bipItem();
+    if (info && info.nome && !ehFalaConversacional(info.nome)) {
+      itensDitadosBuffer.push(info);
+      window.SomMercado.bipItem();
+    }
   });
 
   atualizarTagsDitadasUI();
@@ -525,6 +572,9 @@ function extrairProdutoEQuantidade(texto) {
     }
   }
 
+  // Limpa preposições residuais (ex: "de tomate" -> "tomate")
+  termo = termo.replace(/^(de|da|do|dos|das)\s+/i, '').trim();
+
   const achado = buscarNoCatalogo(termo);
 
   return {
@@ -539,14 +589,79 @@ function buscarNoCatalogo(termo) {
   if (!termo) return { nome: 'Produto', categoria: '📦 Outros', precoMedio: 0 };
   const limpo = termo.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-  for (const prod of appState.produtosCatalogo) {
-    const prodLimpo = prod.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    if (prodLimpo.includes(limpo) || limpo.includes(prodLimpo)) {
-      return prod;
-    }
+  // Nome formatado com a primeira letra maiúscula preservando o que o usuário falou
+  const nomeFormatado = termo.charAt(0).toUpperCase() + termo.slice(1).toLowerCase();
+
+  // 1. Mapeamento direto de alimentos básicos (garante que Tomate não vire Extrato de Tomate, Sal não vire Sal Refinado, etc.)
+  const mapaBasicos = {
+    'tomate': { cat: '🥬 Hortifrúti', preco: 8.90 },
+    'tomates': { cat: '🥬 Hortifrúti', preco: 8.90 },
+    'cebola': { cat: '🥬 Hortifrúti', preco: 5.80 },
+    'cebolas': { cat: '🥬 Hortifrúti', preco: 5.80 },
+    'alho': { cat: '🥬 Hortifrúti', preco: 6.90 },
+    'alhos': { cat: '🥬 Hortifrúti', preco: 6.90 },
+    'batata': { cat: '🥬 Hortifrúti', preco: 6.50 },
+    'batatas': { cat: '🥬 Hortifrúti', preco: 6.50 },
+    'cenoura': { cat: '🥬 Hortifrúti', preco: 5.20 },
+    'cenouras': { cat: '🥬 Hortifrúti', preco: 5.20 },
+    'banana': { cat: '🥬 Hortifrúti', preco: 7.50 },
+    'bananas': { cat: '🥬 Hortifrúti', preco: 7.50 },
+    'maca': { cat: '🥬 Hortifrúti', preco: 9.80 },
+    'macas': { cat: '🥬 Hortifrúti', preco: 9.80 },
+    'laranja': { cat: '🥬 Hortifrúti', preco: 6.50 },
+    'alface': { cat: '🥬 Hortifrúti', preco: 4.50 },
+    'sal': { cat: '🥫 Mercearia', preco: 2.80 },
+    'acucar': { cat: '🥫 Mercearia', preco: 4.90 },
+    'arroz': { cat: '🥫 Mercearia', preco: 29.90 },
+    'feijao': { cat: '🥫 Mercearia', preco: 8.90 },
+    'oleo': { cat: '🥫 Mercearia', preco: 6.90 },
+    'azeite': { cat: '🥫 Mercearia', preco: 36.90 },
+    'cafe': { cat: '🥫 Mercearia', preco: 19.90 },
+    'leite': { cat: '🧀 Laticínios', preco: 5.70 },
+    'queijo': { cat: '🧀 Laticínios', preco: 45.90 },
+    'manteiga': { cat: '🧀 Laticínios', preco: 12.90 },
+    'requeijao': { cat: '🧀 Laticínios', preco: 8.90 },
+    'iogurte': { cat: '🧀 Laticínios', preco: 4.20 },
+    'carne': { cat: '🥩 Carnes', preco: 38.90 },
+    'frango': { cat: '🥩 Carnes', preco: 19.90 },
+    'linguica': { cat: '🥩 Carnes', preco: 22.90 },
+    'bacon': { cat: '🥩 Carnes', preco: 14.90 },
+    'sabao': { cat: '🧼 Limpeza', preco: 19.90 },
+    'detergente': { cat: '🧼 Limpeza', preco: 2.50 },
+    'amaciante': { cat: '🧼 Limpeza', preco: 16.90 },
+    'desinfetante': { cat: '🧼 Limpeza', preco: 6.90 },
+    'sabonete': { cat: '🧴 Higiene', preco: 3.20 },
+    'shampoo': { cat: '🧴 Higiene', preco: 16.90 },
+    'pasta de dente': { cat: '🧴 Higiene', preco: 4.90 },
+    'creme dental': { cat: '🧴 Higiene', preco: 4.90 },
+    'papel higienico': { cat: '🧴 Higiene', preco: 22.90 }
+  };
+
+  if (mapaBasicos[limpo]) {
+    return {
+      nome: nomeFormatado,
+      categoria: mapaBasicos[limpo].cat,
+      precoMedio: mapaBasicos[limpo].preco
+    };
   }
 
+  // 2. Coincidência EXATA com produto cadastrado no catálogo (ex: "Extrato de tomate" se o usuário falou especificamente "extrato de tomate")
+  const exato = appState.produtosCatalogo.find(p => {
+    const pLimpo = p.nome.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    return pLimpo === limpo;
+  });
+  if (exato) {
+    return {
+      nome: exato.nome,
+      categoria: exato.categoria,
+      precoMedio: exato.precoMedio || 0
+    };
+  }
+
+  // 3. Fallback inteligente: mantém o nome exato falado e infere a categoria
   let cat = '📦 Outros';
+  let precoMedio = 0;
+
   if (/leite|queijo|iogurte|manteiga|requeijao|creme/i.test(limpo)) cat = '🧀 Laticínios';
   else if (/carne|frango|bife|peito|linguica|bacon/i.test(limpo)) cat = '🥩 Carnes';
   else if (/tomate|cebola|alho|batata|fruta|banana|maca|alface|legume/i.test(limpo)) cat = '🥬 Hortifrúti';
@@ -554,8 +669,7 @@ function buscarNoCatalogo(termo) {
   else if (/sabao|detergente|amaciante|desinfetante|esponja|limpeza/i.test(limpo)) cat = '🧼 Limpeza';
   else if (/papel|sabonete|shampoo|pasta|escova|higiene/i.test(limpo)) cat = '🧴 Higiene';
 
-  const nomeFormatado = termo.charAt(0).toUpperCase() + termo.slice(1);
-  return { nome: nomeFormatado, categoria: cat, precoMedio: 0 };
+  return { nome: nomeFormatado, categoria: cat, precoMedio: precoMedio };
 }
 
 function atualizarTagsDitadasUI() {
@@ -2321,7 +2435,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderizarTudo();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261023_v7').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261023_v8').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }
