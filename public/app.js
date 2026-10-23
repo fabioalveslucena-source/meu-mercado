@@ -1784,27 +1784,6 @@ window.enviarCompraFechadaAoFinanceiro = async function() {
     alert('⚠️ Não foi possível conectar ao Firestore. Verifique sua conexão de internet.');
   }
 };
-    id: 'mercado_' + Date.now(),
-    nomeLista: lista?.nome || 'Compras de Supermercado',
-    data: new Date().toISOString(),
-    total: totalCalculado > 0 ? totalCalculado : 259.70,
-    totalItens: itensComprados.length,
-    formaPagamento: '💳 Crédito',
-    itens: itensComprados
-  };
-
-  const sucesso = await window.enviarCompraAoFinanceiroFirestore(compraObj);
-  if (btn) {
-    btn.disabled = false;
-    btn.textContent = '🚀 Enviar Compra Fechada para o Meu Financeiro';
-  }
-
-  if (sucesso) {
-    alert(`🎉 Compra de ${formatarMoeda(compraObj.total || 259.70)} enviada com sucesso para o Meu Financeiro em Outubro/2026!\n\nVocê já pode abrir o aplicativo Meu Financeiro para conferir o extrato e o saldo atualizados.`);
-  } else {
-    alert('⚠️ Não foi possível conectar ao Firestore. Verifique sua conexão de internet.');
-  }
-};
 
 // ============================================================================
 // PERFIL DA FAMÍLIA (ADMINISTRADOR FÁBIO)
