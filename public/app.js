@@ -347,6 +347,21 @@ window.filtrarSugestoesDespensa = function(categoria, botao) {
   renderizarTelaInicio();
 };
 
+window.alternarReposicaoDespensa = function() {
+  const conteudo = document.getElementById('conteudoReposicaoDespensa');
+  const seta = document.getElementById('setaReposicaoDespensa');
+  if (!conteudo) return;
+
+  const estaAberto = conteudo.style.display !== 'none';
+  if (estaAberto) {
+    conteudo.style.display = 'none';
+    if (seta) seta.textContent = '▼ Toque para abrir';
+  } else {
+    conteudo.style.display = 'block';
+    if (seta) seta.textContent = '▲ Recolher';
+  }
+};
+
 // ============================================================================
 // 📝 PREPARAR LISTA — MODO DITADO CONTÍNUO DA DESPENSA (PARA SECRETÁRIA)
 // ============================================================================
@@ -445,17 +460,49 @@ function pararDitadoContinuo() {
   }
 }
 
+function ehComandoVozSalvarLista(texto) {
+  if (!texto) return false;
+  const limpo = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+  return /^(salvar|salve|salva|enviar|envie|envia|concluir|conclua|finalizar|finaliza|gerar)(\s+(a\s+|o\s+)?(lista|compras|itens))?$/i.test(limpo) ||
+         /\b(salvar lista|salve a lista|enviar lista|envie a lista|concluir lista|finalizar lista|gerar lista)\b/i.test(limpo);
+}
+
 function adicionarItensAoBuffer(fala) {
   let limpa = fala.replace(/[.?!]/g, ' ').toLowerCase().trim();
+
+  // Se a frase inteira for um comando para salvar ou enviar lista
+  if (ehComandoVozSalvarLista(limpa)) {
+    console.log('🎙️ Comando de voz para salvar lista detectado:', limpa);
+    pararDitadoContinuo();
+    window.SomMercado.bipFinalizarCompra();
+    window.concluirPreparacaoLista();
+    return;
+  }
+
   let pedacos = limpa.split(/[,;\n]|\s+e\s+|\s+mais\s+/i).map(p => p.trim()).filter(p => p.length > 0);
+  let deveSalvarNoFinal = false;
 
   pedacos.forEach(p => {
+    if (ehComandoVozSalvarLista(p)) {
+      deveSalvarNoFinal = true;
+      return;
+    }
     const info = extrairProdutoEQuantidade(p);
     itensDitadosBuffer.push(info);
     window.SomMercado.bipItem();
   });
 
   atualizarTagsDitadasUI();
+
+  // Se o usuário falou itens e terminou dizendo "e salvar lista" ou "e enviar lista"
+  if (deveSalvarNoFinal) {
+    console.log('🎙️ Itens adicionados e comando de voz para salvar lista acionado!');
+    pararDitadoContinuo();
+    window.SomMercado.bipFinalizarCompra();
+    setTimeout(() => {
+      window.concluirPreparacaoLista();
+    }, 400);
+  }
 }
 
 function extrairProdutoEQuantidade(texto) {
@@ -2274,7 +2321,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderizarTudo();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261023_v6').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261023_v7').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }

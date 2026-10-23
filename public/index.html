@@ -44,7 +44,7 @@
           <span class="marca-icone">🛒</span>
           <div class="marca-titulos">
             <span class="marca-nome">Meu Mercado</span>
-            <span class="marca-sub">Nuvem Direta • v3.0</span>
+            <span class="marca-sub">Nuvem Direta • v3.1</span>
           </div>
         </div>
       </div>
@@ -114,29 +114,35 @@
           </div>
         </div>
 
-        <!-- Reposição Inteligente da Despensa (Layout Moderno & Intuitivo) -->
-        <div class="card-reposicao-despensa">
-          <div class="reposicao-cabecalho">
-            <div>
-              <div class="reposicao-titulo">💡 O que está faltando em casa?</div>
-              <div class="reposicao-sub">Toque nos itens que costumam acabar para adicionar à lista ativa</div>
+        <!-- Reposição Inteligente da Despensa (Card Retrátil / Acordeom) -->
+        <div class="card-reposicao-despensa" id="cardReposicaoDespensa">
+          <div class="reposicao-cabecalho" onclick="alternarReposicaoDespensa()" style="cursor: pointer; margin-bottom: 0;">
+            <div style="flex: 1;">
+              <div class="reposicao-titulo" style="display: flex; align-items: center; justify-content: space-between;">
+                <span>💡 O que está faltando em casa?</span>
+                <span id="setaReposicaoDespensa" style="font-size: 12px; color: var(--cor-marca); font-weight: 700; padding: 2px 8px; background: rgba(0,0,0,0.06); border-radius: 8px;">▼ Toque para abrir</span>
+              </div>
+              <div class="reposicao-sub">Sugestões rápidas de reposição da despensa</div>
             </div>
-            <span class="badge-despensa-tag">Despensa</span>
+            <span class="badge-despensa-tag" style="margin-left: 8px;">Despensa</span>
           </div>
 
-          <!-- Filtro rápido de categorias da despensa -->
-          <div class="filtro-despensa-categorias">
-            <button class="pill-despensa ativa" onclick="filtrarSugestoesDespensa('todos', this)">Todos</button>
-            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Mercearia', this)">🥫 Mercearia</button>
-            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Laticínios', this)">🧀 Frios & Leite</button>
-            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Hortifrúti', this)">🥬 Frutas & Legumes</button>
-            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Carnes', this)">🥩 Carnes</button>
-            <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Limpeza', this)">🧼 Limpeza</button>
-          </div>
+          <!-- Conteúdo recolhido por padrão (abre ao clicar) -->
+          <div id="conteudoReposicaoDespensa" style="display: none; margin-top: 14px; border-top: 1px dashed var(--borda-padrao); padding-top: 12px;">
+            <!-- Filtro rápido de categorias da despensa -->
+            <div class="filtro-despensa-categorias">
+              <button class="pill-despensa ativa" onclick="filtrarSugestoesDespensa('todos', this)">Todos</button>
+              <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Mercearia', this)">🥫 Mercearia</button>
+              <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Laticínios', this)">🧀 Frios & Leite</button>
+              <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Hortifrúti', this)">🥬 Frutas & Legumes</button>
+              <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Carnes', this)">🥩 Carnes</button>
+              <button class="pill-despensa" onclick="filtrarSugestoesDespensa('Limpeza', this)">🧼 Limpeza</button>
+            </div>
 
-          <!-- Grade de produtos recomendados para reposição -->
-          <div id="gridProdutosReposicao" class="grade-produtos-reposicao">
-            <!-- Cards injetados via JS -->
+            <!-- Grade de produtos recomendados para reposição -->
+            <div id="gridProdutosReposicao" class="grade-produtos-reposicao">
+              <!-- Cards injetados via JS -->
+            </div>
           </div>
         </div>
       </section>
@@ -781,7 +787,7 @@
       if ('caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
-            if (name !== 'meu-mercado-v6-live') {
+            if (name !== 'meu-mercado-v7-live') {
               caches.delete(name);
             }
           }
@@ -789,7 +795,7 @@
       }
     }
   </script>
-  <script src="/audio.js?v=20261023_v6"></script>
-  <script src="/app.js?v=20261023_v6"></script>
+  <script src="/audio.js?v=20261023_v7"></script>
+  <script src="/app.js?v=20261023_v7"></script>
 </body>
 </html>
