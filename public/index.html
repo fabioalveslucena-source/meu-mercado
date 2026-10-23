@@ -44,7 +44,7 @@
           <span class="marca-icone">🛒</span>
           <div class="marca-titulos">
             <span class="marca-nome">Meu Mercado</span>
-            <span class="marca-sub">Sistema de Compras</span>
+            <span class="marca-sub">Nuvem Direta • v3.0</span>
           </div>
         </div>
       </div>
@@ -769,8 +769,27 @@
 
   </div>
 
-  <!-- Scripts -->
-  <script src="/audio.js"></script>
-  <script src="/app.js"></script>
+  <!-- Scripts com Cache-Buster e Descarte de Cache Antigo -->
+  <script>
+    // Limpeza ativa de Service Worker antigo
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for (let registration of registrations) {
+          registration.update();
+        }
+      });
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (let name of names) {
+            if (name !== 'meu-mercado-v6-live') {
+              caches.delete(name);
+            }
+          }
+        });
+      }
+    }
+  </script>
+  <script src="/audio.js?v=20261023_v6"></script>
+  <script src="/app.js?v=20261023_v6"></script>
 </body>
 </html>

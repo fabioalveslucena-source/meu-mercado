@@ -2274,6 +2274,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderizarTudo();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW:', err));
+    navigator.serviceWorker.register('/sw.js?v=20261023_v6').then(reg => {
+      reg.update();
+    }).catch(err => console.log('SW:', err));
   }
 });
