@@ -303,7 +303,7 @@
             <span style="font-size: 11px; background: rgba(40, 126, 165, 0.4); color: #64b5f6; padding: 2px 8px; border-radius: 10px; font-weight: 700;">Em Tempo Real</span>
           </div>
           <p style="font-size: 12px; color: #cbd5e1; margin: 0; line-height: 1.4;">
-            Envie todas as listas fechadas (R$ 259,70 + R$ 155,70 + R$ 20,00) diretamente para o Meu Financeiro em <strong>Outubro/2026</strong>.
+            Envie todas as suas listas finalizadas diretamente para o extrato e faturas do Meu Financeiro na nuvem.
           </p>
           <button 
             id="btnSyncTodasFechadas"
@@ -450,6 +450,35 @@
             <div class="opcao-pagto" onclick="selecionarFormaPagto('🏦 Débito', this)">🏦 Débito</div>
             <div class="opcao-pagto" onclick="selecionarFormaPagto('📱 Pix', this)">📱 Pix</div>
             <div class="opcao-pagto" onclick="selecionarFormaPagto('💵 Dinheiro', this)">💵 Dinheiro</div>
+          </div>
+        </div>
+
+        <!-- Painel Interativo de Cartão e Parcelamento -->
+        <div id="painelCreditoDetalhes" style="margin-top: 12px; padding: 12px; background: rgba(32, 91, 125, 0.15); border: 1.5px solid rgba(40, 126, 165, 0.4); border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 4px;">💳 Selecione o Cartão:</label>
+            <select id="reciboCartaoCredito" onchange="atualizarResumoParcelas()" style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--cor-azul); background: var(--bg-card); color: var(--texto-principal); font-size: 13px; font-weight: 600; cursor: pointer;">
+              <option value="Banco do Brasil Ourocard">Banco do Brasil Ourocard (Venc. dia 05)</option>
+              <option value="Bradesco Cartões">Bradesco Cartões (Venc. dia 20)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 4px;">🔢 Quantas Parcelas?</label>
+            <select id="reciboNumParcelas" onchange="atualizarResumoParcelas()" style="width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--cor-azul); background: var(--bg-card); color: var(--texto-principal); font-size: 13px; font-weight: 600; cursor: pointer;">
+              <option value="1">1x à vista</option>
+              <option value="2">2x</option>
+              <option value="3">3x</option>
+              <option value="4">4x</option>
+              <option value="5">5x</option>
+              <option value="6">6x</option>
+              <option value="10">10x</option>
+              <option value="12">12x</option>
+            </select>
+          </div>
+
+          <div id="reciboResumoParcelamento" style="font-size: 12px; font-weight: 700; color: var(--cor-marca); text-align: center; background: rgba(0,0,0,0.25); padding: 7px 10px; border-radius: 8px; border: 1px solid rgba(248, 209, 23, 0.3);">
+            1x de R$ 0,00 na fatura do Banco do Brasil Ourocard
           </div>
         </div>
 

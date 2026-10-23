@@ -1318,7 +1318,12 @@ window.enviarListaEspecificaAoFinanceiro = async function(idLista) {
   const itens = appState.itens.filter(i => i.idLista === idLista && i.comprado);
   const hist = appState.historico.find(h => h.nomeLista === lista.nome || h.id === lista.id);
   const t = calcularTotais(idLista);
-  const val = (hist && hist.total > 0) ? hist.total : (t.totalCarrinho > 0 ? t.totalCarrinho : (lista.nome.includes('259') ? 259.70 : (lista.nome.includes('155') ? 155.70 : 20.00)));
+  const val = (hist && hist.total > 0) ? hist.total : (t.totalCarrinho > 0 ? t.totalCarrinho : 0);
+
+  if (val <= 0 && itens.length === 0) {
+    alert('⚠️ Esta lista está sem itens comprados ou valor calculado.');
+    return;
+  }
 
   const compraObj = {
     id: 'mercado_lista_' + idLista,
@@ -1327,6 +1332,8 @@ window.enviarListaEspecificaAoFinanceiro = async function(idLista) {
     total: val,
     totalItens: itens.length || t.itensComprados,
     formaPagamento: hist?.formaPagamento || '💳 Crédito',
+    cartao: hist?.cartao || 'Banco do Brasil Ourocard',
+    totalParcelas: hist?.totalParcelas || 1,
     itens: itens
   };
 
@@ -1356,6 +1363,11 @@ window.enviarTodasAsListasFechadasAoFinanceiro = async function(btnElement) {
       }));
     }
 
+    if (listasFechadas.length === 0) {
+      alert('ℹ️ Nenhuma lista fechada encontrada para sincronizar.');
+      return;
+    }
+
     let totalEnviado = 0;
     let qtdEnviada = 0;
 
@@ -1365,13 +1377,17 @@ window.enviarTodasAsListasFechadasAoFinanceiro = async function(btnElement) {
       const t = calcularTotais(lista.id);
       const val = (hist && hist.total > 0) ? hist.total : (t.totalCarrinho > 0 ? t.totalCarrinho : 0);
 
+      if (val <= 0 && itens.length === 0) continue;
+
       const compraObj = {
         id: 'mercado_' + (lista.id || Date.now()),
         nomeLista: lista.nome,
         data: new Date().toISOString(),
-        total: val > 0 ? val : 259.70,
+        total: val,
         totalItens: itens.length || t.itensComprados,
         formaPagamento: hist?.formaPagamento || '💳 Crédito',
+        cartao: hist?.cartao || 'Banco do Brasil Ourocard',
+        totalParcelas: hist?.totalParcelas || 1,
         itens: itens
       };
 
@@ -1382,59 +1398,11 @@ window.enviarTodasAsListasFechadasAoFinanceiro = async function(btnElement) {
       }
     }
 
-    // Se nenhuma foi enviada pelo loop (ex: listas salvas com outros IDs no dispositivo), envia as 3 listas fechadas padrão:
-    if (qtdEnviada === 0) {
-      const listasPadrao = [
-        {
-          id: 'mercado_outubro_259',
-          nomeLista: 'Compras de Outubro',
-          total: 259.70,
-          formaPagamento: '💳 Crédito',
-          itens: [
-            { produto: 'Leite Integral 1L (6 unidades)', quantidade: 6, precoUnitario: 5.49, precoTotal: 32.94 },
-            { produto: 'Ovos Brancos 30 unidades', quantidade: 1, precoUnitario: 19.00, precoTotal: 19.00 },
-            { produto: 'Arroz Branco 5kg', quantidade: 1, precoUnitario: 29.90, precoTotal: 29.90 },
-            { produto: 'Feijão Carioca 1kg', quantidade: 2, precoUnitario: 8.50, precoTotal: 17.00 },
-            { produto: 'Azeite de Oliva Extra Virgem 500ml', quantidade: 1, precoUnitario: 42.00, precoTotal: 42.00 },
-            { produto: 'Café Torrado e Moído 500g', quantidade: 2, precoUnitario: 18.80, precoTotal: 37.60 },
-            { produto: 'Carnes Bovinas / Cortes', quantidade: 1.5, precoUnitario: 42.00, precoTotal: 63.00 },
-            { produto: 'Detergente Líquido', quantidade: 2, precoUnitario: 2.40, precoTotal: 4.80 },
-            { produto: 'Hortifruti & Padaria', quantidade: 1, precoUnitario: 13.46, precoTotal: 13.46 }
-          ]
-        },
-        {
-          id: 'mercado_hortifruti_155',
-          nomeLista: 'Compras de Hortifruti & Feira',
-          total: 155.70,
-          formaPagamento: '💳 Crédito',
-          itens: [
-            { produto: 'Frutas da Estação Selecionadas', quantidade: 3, precoUnitario: 14.50, precoTotal: 43.50 },
-            { produto: 'Legumes e Verduras Frescas', quantidade: 4, precoUnitario: 8.80, precoTotal: 35.20 },
-            { produto: 'Batata e Cebola (kg)', quantidade: 3, precoUnitario: 7.90, precoTotal: 23.70 },
-            { produto: 'Tomate Italiano (kg)', quantidade: 2, precoUnitario: 9.90, precoTotal: 19.80 },
-            { produto: 'Proteínas / Frango Congelado', quantidade: 2, precoUnitario: 16.75, precoTotal: 33.50 }
-          ]
-        },
-        {
-          id: 'mercado_padaria_20',
-          nomeLista: 'Compra Rápida de Padaria',
-          total: 20.00,
-          formaPagamento: '💳 Crédito',
-          itens: [
-            { produto: 'Pão Francês Tradicional', quantidade: 1, precoUnitario: 12.00, precoTotal: 12.00 },
-            { produto: 'Manteiga / Lanches', quantidade: 1, precoUnitario: 8.00, precoTotal: 8.00 }
-          ]
-        }
-      ];
-
-      for (const lp of listasPadrao) {
-        await window.enviarCompraAoFinanceiroFirestore(lp);
-        qtdEnviada++;
-        totalEnviado += lp.total;
-      }
+    if (qtdEnviada > 0) {
+      alert(`🎉 ${qtdEnviada} lista(s) sincronizada(s) com sucesso no Meu Financeiro!\n\nValor total: ${formatarMoeda(totalEnviado)}\n\nAbra o Meu Financeiro para conferir o extrato e o saldo!`);
+    } else {
+      alert('ℹ️ Nenhuma lista com itens ou valor maior que zero para sincronizar.');
     }
-
-    alert(`🎉 ${qtdEnviada} listas fechadas foram enviadas com sucesso ao Meu Financeiro!\n\n• Compras de Outubro: R$ 259,70\n• Compras de Hortifruti & Feira: R$ 155,70\n• Compra Rápida de Padaria: R$ 20,00\n\nTotal: ${formatarMoeda(totalEnviado)}\nCompetência: Outubro/2026\n\nAbra o Meu Financeiro para conferir o extrato e o saldo!`);
   } catch (err) {
     console.error('Erro ao sincronizar todas as listas:', err);
     alert('Erro ao conectar ao Firestore. Verifique sua conexão.');
@@ -1514,7 +1482,7 @@ window.reabrirListaAtual = function() {
 };
 
 // ============================================================================
-// FINALIZAR COMPRAS (RECIBO + BIP)
+// FINALIZAR COMPRAS (RECIBO + BIP + PARCELAMENTO CRÉDITO)
 // ============================================================================
 let formaPagamentoEscolhida = '💳 Crédito';
 
@@ -1527,6 +1495,9 @@ window.abrirModalFinalizar = function() {
   if (totalDisplay) totalDisplay.textContent = formatarMoeda(totais.totalCarrinho);
   if (qtdDisplay) qtdDisplay.textContent = `${totais.itensComprados} itens comprados de ${totais.totalItens}`;
 
+  atualizarOpcoesParcelamento(totais.totalCarrinho);
+  atualizarVisibilidadePainelCredito();
+
   if (modal) modal.classList.add('aberto');
 };
 
@@ -1534,18 +1505,72 @@ window.fecharModalFinalizar = function() {
   document.getElementById('modalRecibo')?.classList.remove('aberto');
 };
 
+window.atualizarOpcoesParcelamento = function(total) {
+  const selectParcelas = document.getElementById('reciboNumParcelas');
+  if (!selectParcelas) return;
+
+  const parcelasDisponiveis = [1, 2, 3, 4, 5, 6, 10, 12];
+  const selecionadoAnterior = selectParcelas.value || '1';
+
+  selectParcelas.innerHTML = parcelasDisponiveis.map(n => {
+    const vParc = n > 0 ? (total / n).toFixed(2) : total.toFixed(2);
+    const texto = n === 1 ? `1x de R$ ${vParc.replace('.', ',')} (à vista)` : `${n}x de R$ ${vParc.replace('.', ',')}`;
+    return `<option value="${n}" ${String(n) === selecionadoAnterior ? 'selected' : ''}>${texto}</option>`;
+  }).join('');
+
+  atualizarResumoParcelas();
+};
+
+window.atualizarResumoParcelas = function() {
+  const totais = calcularTotais();
+  const select = document.getElementById('reciboNumParcelas');
+  const resumo = document.getElementById('reciboResumoParcelamento');
+  const cartaoSelect = document.getElementById('reciboCartaoCredito');
+  if (!select || !resumo) return;
+
+  const n = parseInt(select.value) || 1;
+  const cartao = cartaoSelect?.value || 'Banco do Brasil Ourocard';
+  const vParc = (totais.totalCarrinho / n).toFixed(2).replace('.', ',');
+
+  if (n === 1) {
+    resumo.textContent = `1x de R$ ${vParc} na fatura do ${cartao}`;
+  } else {
+    resumo.textContent = `${n} parcelas de R$ ${vParc} na fatura do ${cartao}`;
+  }
+};
+
+window.atualizarVisibilidadePainelCredito = function() {
+  const painel = document.getElementById('painelCreditoDetalhes');
+  if (!painel) return;
+  if (formaPagamentoEscolhida === '💳 Crédito') {
+    painel.style.display = 'flex';
+    atualizarResumoParcelas();
+  } else {
+    painel.style.display = 'none';
+  }
+};
+
 window.selecionarFormaPagto = function(forma, botao) {
   formaPagamentoEscolhida = forma;
   document.querySelectorAll('.opcao-pagto').forEach(b => b.classList.remove('selecionada'));
   if (botao) botao.classList.add('selecionada');
+  atualizarVisibilidadePainelCredito();
 };
 
-window.confirmarFinalizarCompraDefinitivo = function() {
+window.confirmarFinalizarCompraDefinitivo = async function() {
   const totais = calcularTotais();
   const lista = appState.listas.find(l => l.id === appState.listaAtivaId);
   const usuario = appState.usuariosFamilia.find(u => u.id === appState.usuarioAtivoId) || appState.usuariosFamilia[0];
 
   window.SomMercado.bipFinalizarCompra();
+
+  const numParcelas = (formaPagamentoEscolhida === '💳 Crédito')
+    ? (parseInt(document.getElementById('reciboNumParcelas')?.value) || 1)
+    : 1;
+
+  const cartaoEscolhido = (formaPagamentoEscolhida === '💳 Crédito')
+    ? (document.getElementById('reciboCartaoCredito')?.value || 'Banco do Brasil Ourocard')
+    : undefined;
 
   const compra = {
     id: 'compra_' + Date.now(),
@@ -1554,6 +1579,8 @@ window.confirmarFinalizarCompraDefinitivo = function() {
     total: totais.totalCarrinho,
     totalItens: totais.itensComprados,
     formaPagamento: formaPagamentoEscolhida,
+    cartao: cartaoEscolhido,
+    totalParcelas: numParcelas,
     responsavel: usuario.nome,
     itens: appState.itens.filter(i => i.idLista === appState.listaAtivaId && i.comprado)
   };
@@ -1568,20 +1595,33 @@ window.confirmarFinalizarCompraDefinitivo = function() {
   renderizarTudo();
 
   // Envia diretamente para o Meu Financeiro no Firestore
-  if (typeof window.enviarCompraAoFinanceiroFirestore === 'function') {
-    window.enviarCompraAoFinanceiroFirestore(compra);
-  }
+  const ok = await window.enviarCompraAoFinanceiroFirestore(compra);
+  
+  const vParcFormatado = numParcelas > 1 ? ` (${numParcelas}x de ${formatarMoeda(compra.total / numParcelas)})` : '';
+  const msgCartao = cartaoEscolhido ? ` no ${cartaoEscolhido}` : ` via ${formaPagamentoEscolhida}`;
 
-  alert(`🎉 Compras finalizadas com sucesso!\n\nResponsável: ${compra.responsavel}\nTotal: ${formatarMoeda(compra.total)}\nPagamento: ${compra.formaPagamento}\n\n✅ Enviado para o Meu Financeiro!\n\n💡 Dica: Se comprou algo a mais, basta tocar em "🔄 Reabrir Lista" no topo!`);
+  if (ok) {
+    alert(`🎉 Compras finalizadas com sucesso!\n\nTotal: ${formatarMoeda(compra.total)}${vParcFormatado}\nPagamento: ${msgCartao}\n\n✅ Lançado automaticamente no Meu Financeiro (extrato e faturas do cartão)!`);
+  } else {
+    alert(`🎉 Compras finalizadas no Meu Mercado!\n\nTotal: ${formatarMoeda(compra.total)}${vParcFormatado}\nPagamento: ${msgCartao}`);
+  }
 };
 
 // ============================================================================
 // INTEGRAÇÃO NUVEM DIRETA: MEU MERCADO → MEU FINANCEIRO (FIRESTORE REST)
+// Suporte nativo a Parcelamento em Cartão de Crédito e Vencimento de Fatura
 // ============================================================================
 window.enviarCompraAoFinanceiroFirestore = async function(compra) {
   try {
-    const docId = compra.id || ('mercado_' + Date.now());
-    const url = `https://firestore.googleapis.com/v1/projects/meu-financeiro-39138/databases/(default)/documents/usuarios/fabio-master-uid/lancamentos/${docId}`;
+    const totalParcelas = Math.max(1, parseInt(compra.totalParcelas) || 1);
+    const cartao = compra.cartao || (compra.formaPagamento === '💳 Crédito' ? 'Banco do Brasil Ourocard' : undefined);
+    const valTotal = Number(compra.total || 0);
+    const compraId = compra.id || ('mercado_' + Date.now());
+
+    // Não envia compra zerada sem itens
+    if (valTotal <= 0 && (!compra.itens || compra.itens.length === 0)) {
+      return false;
+    }
 
     const itensArray = (compra.itens || []).map(i => ({
       mapValue: {
@@ -1594,58 +1634,107 @@ window.enviarCompraAoFinanceiroFirestore = async function(compra) {
       }
     }));
 
-    const valTotal = Number(compra.total || 0);
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = agora.getMonth() + 1; // 1 a 12
+    const dia = agora.getDate();
 
-    const body = {
-      fields: {
+    // Dia de Fechamento de cada Cartão
+    // Banco do Brasil: fecha dia 25 | Bradesco: fecha dia 10
+    const diaFechamento = (cartao && cartao.toLowerCase().includes('bradesco')) ? 10 : 25;
+    const comprouAposFechamento = (compra.formaPagamento === '💳 Crédito') && (dia > diaFechamento);
+
+    const valorCentavos = Math.round(valTotal * 100);
+    const centavosBase = Math.floor(valorCentavos / totalParcelas);
+    const restoCentavos = valorCentavos % totalParcelas;
+
+    let todosOk = true;
+
+    for (let p = 1; p <= totalParcelas; p++) {
+      const docId = totalParcelas > 1 ? `${compraId}_p${p}` : compraId;
+      const url = `https://firestore.googleapis.com/v1/projects/meu-financeiro-39138/databases/(default)/documents/usuarios/fabio-master-uid/lancamentos/${docId}`;
+
+      // Deslocamento de fatura: se após fechamento, 1ª parcela vai pro mês seguinte
+      const deslocamentoFatura = comprouAposFechamento ? p : (p - 1);
+      const dataFatura = new Date(ano, (mes - 1) + deslocamentoFatura, 1);
+      const compMes = String(dataFatura.getMonth() + 1).padStart(2, '0');
+      const compAno = dataFatura.getFullYear();
+      const faturaCompetencia = `${compMes}/${compAno}`;
+
+      // Centavos exatos de cada parcela
+      const centavosParcela = p <= restoCentavos ? centavosBase + 1 : centavosBase;
+      const valorFinal = Number((centavosParcela / 100).toFixed(2));
+
+      const descBase = compra.nomeLista ? `Compra ${compra.nomeLista}` : 'Compras de Supermercado';
+      const descFinal = totalParcelas > 1 ? `${descBase} (${p}/${totalParcelas})` : descBase;
+
+      const fieldsObj = {
         id: { stringValue: docId },
         userId: { stringValue: 'fabio-master-uid' },
-        data: { stringValue: new Date().toISOString() },
-        competencia: { stringValue: '10/2026' },
-        valor: { doubleValue: valTotal > 0 ? valTotal : 259.70 },
+        data: { stringValue: agora.toISOString() },
+        competencia: { stringValue: faturaCompetencia },
+        valor: { doubleValue: valorFinal },
         tipo: { stringValue: 'Despesa' },
         natureza: { stringValue: '🛒 Alimentação' },
         categoria: { stringValue: 'Supermercado' },
-        descricao: { stringValue: compra.nomeLista ? `Compra ${compra.nomeLista}` : 'Compras de Supermercado' },
+        descricao: { stringValue: descFinal },
         pagamento: { stringValue: compra.formaPagamento || '💳 Crédito' },
         status: { stringValue: 'Lançado' },
         origem: { stringValue: 'meu-mercado' },
-        criadoEm: { stringValue: new Date().toISOString() },
-        atualizadoEm: { stringValue: new Date().toISOString() },
-        detalhesMercado: {
-          mapValue: {
-            fields: {
-              mercadoNome: { stringValue: compra.nomeLista || 'Meu Mercado' },
-              cupomNumero: { stringValue: 'MM-' + String(Date.now()).slice(-4) },
-              totalItens: { integerValue: String(compra.totalItens || compra.itens?.length || 0) },
-              valorTotal: { doubleValue: valTotal > 0 ? valTotal : 259.70 },
-              dataCompra: { stringValue: new Date().toISOString().slice(0, 10) },
-              formaPagamentoUtilizada: { stringValue: compra.formaPagamento || '💳 Crédito' },
-              itens: {
-                arrayValue: {
-                  values: itensArray
-                }
+        criadoEm: { stringValue: agora.toISOString() },
+        atualizadoEm: { stringValue: agora.toISOString() },
+      };
+
+      if (compra.formaPagamento === '💳 Crédito' && cartao) {
+        fieldsObj.cartao = { stringValue: cartao };
+        fieldsObj.fatura = { stringValue: faturaCompetencia };
+        fieldsObj.compraId = { stringValue: compraId };
+        if (totalParcelas > 1) {
+          fieldsObj.parcela = { integerValue: String(p) };
+          fieldsObj.totalParcelas = { integerValue: String(totalParcelas) };
+        }
+      }
+
+      fieldsObj.detalhesMercado = {
+        mapValue: {
+          fields: {
+            mercadoNome: { stringValue: compra.nomeLista || 'Meu Mercado' },
+            cupomNumero: { stringValue: 'MM-' + String(Date.now()).slice(-4) },
+            totalItens: { integerValue: String(compra.totalItens || compra.itens?.length || 0) },
+            valorTotal: { doubleValue: valTotal },
+            parcelaAtual: { integerValue: String(p) },
+            totalParcelas: { integerValue: String(totalParcelas) },
+            dataCompra: { stringValue: agora.toISOString().slice(0, 10) },
+            formaPagamentoUtilizada: { stringValue: compra.formaPagamento || '💳 Crédito' },
+            cartaoUtilizado: { stringValue: cartao || '' },
+            itens: {
+              arrayValue: {
+                values: itensArray
               }
             }
           }
         }
+      };
+
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields: fieldsObj })
+      });
+
+      if (!res.ok) {
+        todosOk = false;
+        console.warn('Falha no PATCH do doc:', docId, res.status);
+      } else {
+        console.log('✅ Parcela lançada no Firestore:', docId, faturaCompetencia, valorFinal);
       }
-    };
-
-    const res = await fetch(url, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if (res.ok) {
-      console.log('✅ Compra sincronizada com Meu Financeiro:', docId);
-      return true;
     }
+
+    return todosOk;
   } catch (err) {
     console.error('Erro ao sincronizar com Firestore:', err);
+    return false;
   }
-  return false;
 };
 
 window.enviarCompraFechadaAoFinanceiro = async function() {
@@ -1658,10 +1747,43 @@ window.enviarCompraFechadaAoFinanceiro = async function() {
   const lista = appState.listas.find(l => l.id === appState.listaAtivaId);
   const compraHist = appState.historico.find(h => h.nomeLista === lista?.nome) || appState.historico[0];
   const itensComprados = appState.itens.filter(i => i.idLista === appState.listaAtivaId && i.comprado);
+  const totais = calcularTotais(appState.listaAtivaId);
   
-  const totalCalculado = compraHist?.total || (appState.itens.filter(i => i.idLista === appState.listaAtivaId && i.comprado).reduce((acc, i) => acc + ((i.quantidade || 1) * (i.precoUnitario || 0)), 0)) || 259.70;
+  const totalCalculado = compraHist?.total || totais.totalCarrinho || 0;
+
+  if (totalCalculado <= 0 && itensComprados.length === 0) {
+    alert('⚠️ Esta lista está sem itens comprados ou valor calculado.');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🚀 Enviar Compra Fechada para o Meu Financeiro';
+    }
+    return;
+  }
 
   const compraObj = compraHist || {
+    id: 'mercado_' + (lista?.id || Date.now()),
+    nomeLista: lista?.nome || 'Compras de Supermercado',
+    data: new Date().toISOString(),
+    total: totalCalculado,
+    totalItens: itensComprados.length,
+    formaPagamento: '💳 Crédito',
+    cartao: 'Banco do Brasil Ourocard',
+    totalParcelas: 1,
+    itens: itensComprados
+  };
+
+  const sucesso = await window.enviarCompraAoFinanceiroFirestore(compraObj);
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = '🚀 Enviar Compra Fechada para o Meu Financeiro';
+  }
+
+  if (sucesso) {
+    alert(`🎉 Compra de ${formatarMoeda(compraObj.total)} enviada com sucesso para o Meu Financeiro!\n\nVocê já pode abrir o aplicativo Meu Financeiro para conferir o extrato e as faturas.`);
+  } else {
+    alert('⚠️ Não foi possível conectar ao Firestore. Verifique sua conexão de internet.');
+  }
+};
     id: 'mercado_' + Date.now(),
     nomeLista: lista?.nome || 'Compras de Supermercado',
     data: new Date().toISOString(),
