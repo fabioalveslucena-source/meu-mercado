@@ -287,15 +287,49 @@ function renderizarTermometro() {
   const elementoGasto = document.getElementById('termometroGasto');
   const elementoMeta = document.getElementById('termometroMeta');
   const barra = document.getElementById('termometroBarra');
+  const badgePerc = document.getElementById('termometroPerc');
+  const statusTexto = document.getElementById('termometroStatusTexto');
+  const restanteTexto = document.getElementById('termometroRestante');
 
-  if (elementoGasto) elementoGasto.textContent = formatarMoeda(totais.totalCarrinho);
-  if (elementoMeta) elementoMeta.textContent = `Meta: ${formatarMoeda(totais.meta)}`;
+  const meta = Number(totais.meta) || 0;
+  const gasto = Number(totais.totalCarrinho) || 0;
+
+  if (elementoGasto) elementoGasto.textContent = formatarMoeda(gasto);
+  if (elementoMeta) elementoMeta.textContent = `Meta: ${formatarMoeda(meta)}`;
+
+  const percReal = meta > 0 ? Math.round((gasto / meta) * 100) : 0;
+  const larguraBarra = Math.min(Math.max(percReal, 0), 100);
+
+  if (badgePerc) {
+    badgePerc.textContent = `${percReal}% da meta`;
+    badgePerc.className = 'termometro-perc-badge';
+    if (percReal >= 100) badgePerc.classList.add('perigo');
+    else if (percReal >= 80) badgePerc.classList.add('alerta');
+  }
 
   if (barra) {
-    barra.style.width = `${totais.percMeta}%`;
+    barra.style.width = `${larguraBarra}%`;
     barra.className = 'termometro-barra-progresso';
-    if (totais.percMeta >= 95) barra.classList.add('perigo');
-    else if (totais.percMeta >= 80) barra.classList.add('alerta');
+    if (percReal >= 100) barra.classList.add('perigo');
+    else if (percReal >= 80) barra.classList.add('alerta');
+  }
+
+  if (statusTexto && restanteTexto) {
+    statusTexto.className = 'termometro-status-texto';
+    if (gasto === 0) {
+      statusTexto.textContent = '✓ Carrinho vazio';
+      restanteTexto.textContent = `Disponível: ${formatarMoeda(meta)}`;
+    } else if (gasto <= meta) {
+      const sobra = meta - gasto;
+      statusTexto.textContent = percReal >= 80 ? '⚠️ Atenção à meta' : '✓ Dentro do planejado';
+      if (percReal >= 80) statusTexto.classList.add('alerta');
+      restanteTexto.textContent = `Restam ${formatarMoeda(sobra)}`;
+    } else {
+      const excesso = gasto - meta;
+      statusTexto.textContent = '⚠️ Meta ultrapassada!';
+      statusTexto.classList.add('perigo');
+      restanteTexto.textContent = `Excedeu em ${formatarMoeda(excesso)}`;
+    }
   }
 }
 
@@ -2481,7 +2515,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderizarTudo();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261023_v9').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261023_v10').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }
