@@ -1592,11 +1592,11 @@ window.enviarListaEspecificaAoFinanceiro = async function(idLista) {
     itens: itens
   };
 
-  const ok = await window.enviarCompraAoFinanceiroFirestore(compraObj);
+  const ok = await window.enviarCompraAoFinanceiroFirestore(compraObj, true);
   if (ok) {
-    alert(`🎉 Lista "${lista.nome}" de ${formatarMoeda(val)} enviada com sucesso para o Meu Financeiro!\n\nCompetência: Outubro/2026`);
+    window.mostrarToastMercado(`🎉 Lista "${lista.nome}" (${formatarMoeda(val)}) sincronizada com o Meu Financeiro!`, 'sucesso', 4500);
   } else {
-    alert('⚠️ Não foi possível sincronizar no momento. Verifique sua conexão com a internet.');
+    window.mostrarToastMercado('📱 Sem conexão. Compra salva na fila e será enviada assim que a internet reconectar.', 'alerta', 4500);
   }
 };
 
@@ -1772,7 +1772,7 @@ window.confirmarExcluirListaApenasMercado = function() {
   const nome = lista?.nome || 'Lista';
   executarRemocaoLocalLista(listaIdParaExcluir);
   fecharModalExclusaoLista();
-  alert(`✓ A lista "${nome}" foi removida do Meu Mercado.\n\nOs lançamentos e faturas continuam preservados no seu extrato do Meu Financeiro.`);
+  window.mostrarToastMercado(`✓ Lista "${nome}" removida. Lançamentos preservados no Meu Financeiro.`, 'sucesso', 4500);
 };
 
 // Opção: Excluir de Ambos (Meu Mercado + Meu Financeiro na nuvem)
@@ -1799,10 +1799,10 @@ window.confirmarExcluirListaDeAmbos = async function() {
     executarRemocaoLocalLista(idLista);
     fecharModalExclusaoLista();
 
-    alert(`🗑️ A lista "${nome}" foi removida do Meu Mercado e seus lançamentos foram apagados do extrato do Meu Financeiro!`);
+    window.mostrarToastMercado(`🗑️ Lista "${nome}" e seus lançamentos no Meu Financeiro foram apagados!`, 'sucesso', 4500);
   } catch (err) {
     console.error('Erro ao excluir de ambos:', err);
-    alert('Erro ao conectar com a nuvem. Verifique sua conexão.');
+    window.mostrarToastMercado('Erro ao conectar com a nuvem. Verifique sua conexão.', 'erro', 4500);
   } finally {
     if (btn) {
       btn.disabled = false;
@@ -2138,23 +2138,32 @@ window.confirmarFinalizarCompraDefinitivo = async function() {
   renderizarTudo();
 
   // Envia diretamente para o Meu Financeiro no Firestore
-  const ok = await window.enviarCompraAoFinanceiroFirestore(compra);
+  const ok = await window.enviarCompraAoFinanceiroFirestore(compra, true);
   
   const vParcFormatado = numParcelas > 1 ? ` (${numParcelas}x de ${formatarMoeda(compra.total / numParcelas)})` : '';
   const msgCartao = cartaoEscolhido ? ` no ${cartaoEscolhido}` : ` via ${formaPagamentoEscolhida}`;
 
   if (ok) {
-    alert(`🎉 Compras finalizadas com sucesso!\n\n📋 Lista: ${compra.nomeLista}\n💰 Total: ${formatarMoeda(compra.total)}${vParcFormatado}\n💳 Pagamento: ${msgCartao}\n\n✅ Lançado automaticamente no Meu Financeiro (extrato e faturas do cartão)!`);
+    window.mostrarToastMercado(`🎉 Compras finalizadas! ${formatarMoeda(compra.total)}${vParcFormatado}${msgCartao} lançado no Meu Financeiro!`, 'sucesso', 5500);
   } else {
-    alert(`⚠️ Compras finalizadas no Meu Mercado!\n\n📋 Total: ${formatarMoeda(compra.total)}${vParcFormatado}\n\nHouve uma oscilação ao comunicar com a nuvem do Meu Financeiro. Você pode reenviar a qualquer momento clicando em "🚀 Enviar Compra Fechada para o Meu Financeiro".`);
+    window.mostrarToastMercado(`📱 Compras salvas! Gravadas na fila offline para envio automático ao Meu Financeiro.`, 'info', 5500);
   }
 };
 
 // ============================================================================
 // INTEGRAÇÃO NUVEM DIRETA: MEU MERCADO → MEU FINANCEIRO (FIRESTORE REST)
-// Suporte nativo a Parcelamento em Cartão de Crédito e Vencimento de Fatura
+// Suporte nativo a Parcelamento em Cartão de Crédito, Vencimento de Fatura e Fila Offline
 // ============================================================================
-window.enviarCompraAoFinanceiroFirestore = async function(compra) {
+window.enviarCompraAoFinanceiroFirestore = async function(compra, adicionarNaFilaSeFalhar = true) {
+  // Verificação prévia de conexão offline
+  if (!navigator.onLine) {
+    if (adicionarNaFilaSeFalhar) {
+      window.salvarFilaOffline(compra);
+      window.mostrarToastMercado('📱 Sem internet no momento. Compra guardada com segurança e será enviada automaticamente assim que reconectar!', 'info', 5000);
+    }
+    return false;
+  }
+
   try {
     const totalParcelas = Math.max(1, parseInt(compra.totalParcelas) || 1);
     const cartao = compra.cartao || (compra.formaPagamento === '💳 Crédito' ? 'Banco do Brasil Ourocard' : undefined);
@@ -2284,9 +2293,17 @@ window.enviarCompraAoFinanceiroFirestore = async function(compra) {
       }
     }
 
+    if (!todosOk && adicionarNaFilaSeFalhar) {
+      window.salvarFilaOffline(compra);
+    }
+
     return todosOk;
   } catch (err) {
     console.error('Erro ao sincronizar com Firestore:', err);
+    if (adicionarNaFilaSeFalhar) {
+      window.salvarFilaOffline(compra);
+      window.mostrarToastMercado('☁️ Oscilação de rede. Compra salva na fila e será enviada automaticamente!', 'alerta', 5000);
+    }
     return false;
   }
 };
@@ -2329,16 +2346,16 @@ window.enviarCompraFechadaAoFinanceiro = async function() {
     itens: itensComprados
   };
 
-  const sucesso = await window.enviarCompraAoFinanceiroFirestore(compraObj);
+  const sucesso = await window.enviarCompraAoFinanceiroFirestore(compraObj, true);
   if (btn) {
     btn.disabled = false;
     btn.textContent = '🚀 Enviar Compra Fechada para o Meu Financeiro';
   }
 
   if (sucesso) {
-    alert(`🎉 Compra de ${formatarMoeda(compraObj.total)} enviada com sucesso para o Meu Financeiro!\n\nVocê já pode abrir o aplicativo Meu Financeiro para conferir o extrato e as faturas.`);
+    window.mostrarToastMercado(`🎉 Compra de ${formatarMoeda(compraObj.total)} enviada com sucesso para o Meu Financeiro!`, 'sucesso', 4500);
   } else {
-    alert('⚠️ Não foi possível conectar ao Firestore. Verifique sua conexão de internet.');
+    window.mostrarToastMercado(`📱 Oscilação de rede: compra guardada na fila para envio automático.`, 'alerta', 4500);
   }
 };
 
@@ -2507,15 +2524,141 @@ function formatarMoeda(val) {
 }
 
 // ============================================================================
+// TOASTS MODERNOS (FEEDBACK EM TEMPO REAL)
+// ============================================================================
+window.mostrarToastMercado = function(mensagem, tipo = 'sucesso', duracao = 3800) {
+  const container = document.getElementById('toastMercadoContainer');
+  if (!container) return;
+
+  const toast = document.createElement('div');
+  toast.className = `toast-mercado ${tipo}`;
+  
+  const icones = {
+    sucesso: '✅',
+    erro: '❌',
+    alerta: '⚠️',
+    info: 'ℹ️'
+  };
+  const icone = icones[tipo] || '🛒';
+
+  toast.innerHTML = `<span style="font-size: 16px;">${icone}</span><span style="flex: 1; line-height: 1.35;">${mensagem}</span>`;
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300);
+  }, duracao);
+};
+
+// ============================================================================
+// MODO MERCADO: WAKE LOCK API (MANTER TELA SEMPRE ACESA NO CARRINHO)
+// ============================================================================
+let wakeLockSentinel = null;
+
+window.alternarModoMercado = async function() {
+  const btn = document.getElementById('btnWakeLockMercado');
+  const icone = document.getElementById('iconeWakeLock');
+  const texto = document.getElementById('textoWakeLock');
+
+  if (!('wakeLock' in navigator)) {
+    window.mostrarToastMercado('Seu navegador não suporta manter a tela ativa.', 'alerta');
+    return;
+  }
+
+  try {
+    if (wakeLockSentinel !== null) {
+      await wakeLockSentinel.release();
+      wakeLockSentinel = null;
+      if (btn) btn.classList.remove('ativo');
+      if (icone) icone.textContent = '💡';
+      if (texto) texto.textContent = 'Tela Ativa';
+      window.mostrarToastMercado('Modo Mercado desativado: bloqueio de tela restaurado.', 'info');
+    } else {
+      wakeLockSentinel = await navigator.wakeLock.request('screen');
+      if (btn) btn.classList.add('ativo');
+      if (icone) icone.textContent = '☀️';
+      if (texto) texto.textContent = 'Tela Sempre Ativa';
+      window.mostrarToastMercado('☀️ Modo Mercado Ativo: a tela não vai apagar durante as compras!', 'sucesso');
+
+      wakeLockSentinel.addEventListener('release', () => {
+        wakeLockSentinel = null;
+        if (btn) btn.classList.remove('ativo');
+        if (icone) icone.textContent = '💡';
+        if (texto) texto.textContent = 'Tela Ativa';
+      });
+    }
+  } catch (err) {
+    console.warn('Erro ao solicitar Wake Lock:', err);
+    window.mostrarToastMercado('Não foi possível manter a tela ativa no momento.', 'erro');
+  }
+};
+
+// ============================================================================
+// FILA OFFLINE AUTOMÁTICA (GARANTIA DE ENTREGA NO FIRESTORE MESMO SEM SINAL)
+// ============================================================================
+const STORAGE_KEY_FILA_OFFLINE = 'MM_FILA_OFFLINE_V1';
+
+window.salvarFilaOffline = function(compra) {
+  try {
+    const fila = window.carregarFilaOffline();
+    fila.push(compra);
+    localStorage.setItem(STORAGE_KEY_FILA_OFFLINE, JSON.stringify(fila));
+  } catch (e) {
+    console.error('Erro ao salvar fila offline:', e);
+  }
+};
+
+window.carregarFilaOffline = function() {
+  try {
+    const str = localStorage.getItem(STORAGE_KEY_FILA_OFFLINE);
+    return str ? JSON.parse(str) : [];
+  } catch {
+    return [];
+  }
+};
+
+window.tentarEnviarFilaOffline = async function() {
+  if (!navigator.onLine) return;
+  const fila = window.carregarFilaOffline();
+  if (fila.length === 0) return;
+
+  console.log(`[Offline Sync] Tentando enviar ${fila.length} compra(s) pendente(s)...`);
+  const itensRestantes = [];
+
+  for (const compra of fila) {
+    try {
+      const ok = await window.enviarCompraAoFinanceiroFirestore(compra, false);
+      if (ok) {
+        window.mostrarToastMercado(`☁️ Compra offline "${compra.nomeLista}" sincronizada com o Meu Financeiro!`, 'sucesso');
+      } else {
+        itensRestantes.push(compra);
+      }
+    } catch {
+      itensRestantes.push(compra);
+    }
+  }
+
+  localStorage.setItem(STORAGE_KEY_FILA_OFFLINE, JSON.stringify(itensRestantes));
+};
+
+window.addEventListener('online', () => {
+  window.mostrarToastMercado('Conexão restabelecida! Sincronizando compras pendentes...', 'info');
+  window.tentarEnviarFilaOffline();
+});
+
+// ============================================================================
 // INICIALIZAÇÃO
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
   carregarLocal();
   aplicarTema();
   renderizarTudo();
+  window.tentarEnviarFilaOffline();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261023_v10').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261023_v11').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }

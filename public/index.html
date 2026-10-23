@@ -44,7 +44,7 @@
           <span class="marca-icone">🛒</span>
           <div class="marca-titulos">
             <span class="marca-nome">Meu Mercado</span>
-            <span class="marca-sub">Nuvem Direta • v3.4</span>
+            <span class="marca-sub">Nuvem Direta • v3.5</span>
           </div>
         </div>
       </div>
@@ -233,10 +233,16 @@
 
           <div class="linha-sub-seletor">
             <div id="dataListaAtiva" class="data-criacao-lista">📅 Criada em 21/10/2026</div>
-            <button class="btn-item-voz-moderno" onclick="abrirModalVozCompleta()" title="Adicionar item falando nome, quantidade e preço de uma vez só">
-              <span class="icone-mic-glow">🎙️</span>
-              <span>Item por voz</span>
-            </button>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <button id="btnWakeLockMercado" class="btn-wakelock" onclick="alternarModoMercado()" title="Manter tela do celular sempre acesa durante as compras">
+                <span id="iconeWakeLock">💡</span>
+                <span id="textoWakeLock">Tela Ativa</span>
+              </button>
+              <button class="btn-item-voz-moderno" onclick="abrirModalVozCompleta()" title="Adicionar item falando nome, quantidade e preço de uma vez só">
+                <span class="icone-mic-glow">🎙️</span>
+                <span>Item por voz</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -785,6 +791,9 @@
 
   </div>
 
+  <!-- Container de Toasts Elegantes em Tempo Real -->
+  <div id="toastMercadoContainer" class="toast-mercado-container"></div>
+
   <!-- Scripts com Cache-Buster e Descarte de Cache Antigo -->
   <script>
     // Limpeza ativa de Service Worker antigo
@@ -797,7 +806,7 @@
       if ('caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
-            if (name !== 'meu-mercado-v10-live') {
+            if (name !== 'meu-mercado-v11-live') {
               caches.delete(name);
             }
           }
@@ -805,7 +814,7 @@
       }
     }
   </script>
-  <script src="/audio.js?v=20261023_v10"></script>
-  <script src="/app.js?v=20261023_v10"></script>
+  <script src="/audio.js?v=20261023_v11"></script>
+  <script src="/app.js?v=20261023_v11"></script>
 </body>
 </html>
