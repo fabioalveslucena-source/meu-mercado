@@ -646,6 +646,58 @@
     </div>
 
     <!-- ==================================================================
+         MODAL CONFIRMAR EXCLUSÃO DE LISTA (INTEGRAÇÃO MEU FINANCEIRO)
+    =================================================================== -->
+    <div id="modalConfirmarExclusaoLista" class="modal-overlay">
+      <div class="modal-card" style="max-width: 400px; padding: 22px; text-align: center;">
+        <div style="font-size: 38px; margin-bottom: 8px;">⚠️</div>
+        <h3 id="tituloExclusaoLista" style="font-size: 16px; font-weight: 800; margin: 0 0 6px 0; color: #FFFFFF;">
+          Excluir Lista
+        </h3>
+        <p id="subExclusaoLista" style="font-size: 12px; color: #cbd5e1; line-height: 1.5; margin: 0 0 16px 0;">
+          Esta compra já foi enviada e registrada no <strong>Meu Financeiro</strong>.<br/>Como deseja prosseguir?
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Opção 1: Excluir de Ambos -->
+          <button 
+            id="btnExcluirAmbos"
+            type="button"
+            onclick="confirmarExcluirListaDeAmbos()"
+            style="width: 100%; padding: 12px; background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%); border: 1.5px solid #ef4444; color: #FFFFFF; font-weight: 800; font-size: 13px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);"
+          >
+            <span>🗑️ Excluir do Mercado e do Financeiro</span>
+          </button>
+          <small style="color: #f87171; font-size: 11px; margin-top: -6px;">
+            Remove a lista daqui e apaga os lançamentos/parcelas no Financeiro.
+          </small>
+
+          <!-- Opção 2: Manter no Financeiro -->
+          <button 
+            id="btnManterFinanceiro"
+            type="button"
+            onclick="confirmarExcluirListaApenasMercado()"
+            style="width: 100%; padding: 12px; background: linear-gradient(135deg, #1e3a5f 0%, #205b7d 100%); border: 1.5px solid #38bdf8; color: #FFFFFF; font-weight: 800; font-size: 13px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 4px;"
+          >
+            <span>🛡️ Manter no Financeiro</span>
+          </button>
+          <small style="color: #94a3b8; font-size: 11px; margin-top: -6px;">
+            Limpa a lista apenas daqui, preservando seus gastos e faturas no Financeiro.
+          </small>
+
+          <!-- Cancelar -->
+          <button 
+            type="button"
+            onclick="fecharModalExclusaoLista()"
+            style="width: 100%; padding: 10px; background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: #cbd5e1; font-weight: 600; font-size: 12px; border-radius: 10px; cursor: pointer; margin-top: 6px;"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
          MENU INFERIOR (3 ABAS PRINCIPAIS)
     =================================================================== -->
     <nav class="navegacao">

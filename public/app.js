@@ -1453,20 +1453,141 @@ window.salvarNovaLista = function() {
   abrirTela('telaCompras', document.getElementById('navCompras'));
 };
 
+let listaIdParaExcluir = null;
+
 window.excluirLista = function(idLista) {
   if (appState.listas.length <= 1) {
     alert('Você precisa manter pelo menos uma lista de compras.');
     return;
   }
+
   const lista = appState.listas.find(l => l.id === idLista);
-  if (confirm(`Deseja excluir a lista "${lista?.nome}" e todos os seus itens?`)) {
-    appState.listas = appState.listas.filter(l => l.id !== idLista);
-    appState.itens = appState.itens.filter(i => i.idLista !== idLista);
-    if (appState.listaAtivaId === idLista) {
-      appState.listaAtivaId = appState.listas[0].id;
+  if (!lista) return;
+
+  const foiEnviada = lista.status === 'FECHADA' || appState.historico.some(h => h.nomeLista === lista.nome || h.id === lista.id);
+
+  if (!foiEnviada) {
+    // Lista comum aberta: confirmação simples
+    if (confirm(`Deseja excluir a lista "${lista.nome}" e todos os seus itens?`)) {
+      executarRemocaoLocalLista(idLista);
     }
-    window.SomMercado.bipDesmarcar();
-    renderizarTudo();
+  } else {
+    // Lista já fechada / enviada: abre o modal de escolha inteligente
+    listaIdParaExcluir = idLista;
+    const modal = document.getElementById('modalConfirmarExclusaoLista');
+    const titulo = document.getElementById('tituloExclusaoLista');
+    const sub = document.getElementById('subExclusaoLista');
+    if (titulo) titulo.textContent = `Excluir "${lista.nome}"`;
+    if (sub) {
+      sub.innerHTML = `Esta compra já foi enviada e registrada no <strong>Meu Financeiro</strong>.<br/>Como deseja prosseguir?`;
+    }
+    if (modal) modal.classList.add('aberto');
+  }
+};
+
+window.fecharModalExclusaoLista = function() {
+  listaIdParaExcluir = null;
+  document.getElementById('modalConfirmarExclusaoLista')?.classList.remove('aberto');
+};
+
+function executarRemocaoLocalLista(idLista) {
+  appState.listas = appState.listas.filter(l => l.id !== idLista);
+  appState.itens = appState.itens.filter(i => i.idLista !== idLista);
+  if (appState.listaAtivaId === idLista) {
+    appState.listaAtivaId = appState.listas[0]?.id || '';
+  }
+  window.SomMercado.bipDesmarcar();
+  renderizarTudo();
+}
+
+// Opção: Manter no Financeiro
+window.confirmarExcluirListaApenasMercado = function() {
+  if (!listaIdParaExcluir) return;
+  const lista = appState.listas.find(l => l.id === listaIdParaExcluir);
+  const nome = lista?.nome || 'Lista';
+  executarRemocaoLocalLista(listaIdParaExcluir);
+  fecharModalExclusaoLista();
+  alert(`✓ A lista "${nome}" foi removida do Meu Mercado.\n\nOs lançamentos e faturas continuam preservados no seu extrato do Meu Financeiro.`);
+};
+
+// Opção: Excluir de Ambos (Meu Mercado + Meu Financeiro na nuvem)
+window.confirmarExcluirListaDeAmbos = async function() {
+  if (!listaIdParaExcluir) return;
+  const idLista = listaIdParaExcluir;
+  const lista = appState.listas.find(l => l.id === idLista);
+  const nome = lista?.nome || 'Lista';
+
+  const btn = document.getElementById('btnExcluirAmbos');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Excluindo do Financeiro...';
+  }
+
+  try {
+    // 1. Remove os lançamentos no Meu Financeiro (Firestore)
+    await window.excluirLancamentosNuvemFirestore(idLista, nome);
+
+    // 2. Remove do histórico local
+    appState.historico = appState.historico.filter(h => h.nomeLista !== nome && h.id !== idLista);
+
+    // 3. Remove a lista local
+    executarRemocaoLocalLista(idLista);
+    fecharModalExclusaoLista();
+
+    alert(`🗑️ A lista "${nome}" foi removida do Meu Mercado e seus lançamentos foram apagados do extrato do Meu Financeiro!`);
+  } catch (err) {
+    console.error('Erro ao excluir de ambos:', err);
+    alert('Erro ao conectar com a nuvem. Verifique sua conexão.');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '🗑️ Excluir do Mercado e do Financeiro';
+    }
+  }
+};
+
+// Exclui no Firestore todos os documentos associados a esta lista (inclusive parcelas!)
+window.excluirLancamentosNuvemFirestore = async function(idLista, nomeLista) {
+  try {
+    const urlBase = 'https://firestore.googleapis.com/v1/projects/meu-financeiro-39138/databases/(default)/documents/usuarios/fabio-master-uid/lancamentos';
+    
+    // Busca todos os lançamentos para achar os correspondentes
+    const res = await fetch(urlBase);
+    if (!res.ok) return false;
+
+    const data = await res.json();
+    const docs = data.documents || [];
+
+    const idsParaDeletar = [];
+
+    docs.forEach(doc => {
+      const docId = doc.name.split('/').pop();
+      const fields = doc.fields || {};
+      const desc = String(fields.descricao?.stringValue || '').toLowerCase();
+      const mercNome = String(fields.detalhesMercado?.mapValue?.fields?.mercadoNome?.stringValue || '').toLowerCase();
+      const compraId = String(fields.compraId?.stringValue || '').toLowerCase();
+      const idOrig = String(fields.id?.stringValue || '').toLowerCase();
+
+      const buscaId = String(idLista || '').toLowerCase();
+      const buscaNome = String(nomeLista || '').toLowerCase();
+
+      const bateuPorId = buscaId && (docId.includes(buscaId) || compraId.includes(buscaId) || idOrig.includes(buscaId));
+      const bateuPorNome = buscaNome && (desc.includes(buscaNome) || mercNome === buscaNome);
+
+      if (bateuPorId || bateuPorNome) {
+        idsParaDeletar.push(docId);
+      }
+    });
+
+    for (const docId of idsParaDeletar) {
+      await fetch(`${urlBase}/${docId}`, { method: 'DELETE' });
+      console.log('🗑️ Doc apagado da nuvem:', docId);
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Erro em excluirLancamentosNuvemFirestore:', err);
+    return false;
   }
 };
 
