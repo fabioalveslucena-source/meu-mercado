@@ -288,10 +288,9 @@ html, body {
   white-space: nowrap;
 }
 
-@media (max-width: 380px) {
-  .marca-sub { display: none; }
-  .marca-badge { padding: 4px 6px; }
-  .topo-nome-usuario { font-size: 13px; }
+@media (max-width: 480px) {
+  .topo-marca-centro { display: none; }
+  .topo-nome-usuario { font-size: 14px; }
 }
 
 .topo-acoes {
@@ -545,6 +544,13 @@ html, body {
   font-size: 30px;
   flex-shrink: 0;
   backdrop-filter: blur(8px);
+}
+
+.card-fazer-compras .card-icone-redondo {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.5);
+  font-size: 32px;
 }
 
 /* ============================================================================
@@ -1884,3 +1890,134 @@ body.tema-escuro .dica-voz-box {
     font-size: 24px;
   }
 }
+
+/* ============================================================================
+   AJUSTES RESPONSIVOS MOBILE v3.7 (SLIDES 1, 2 e 3)
+============================================================================ */
+.btn-abrir-reposicao {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--cor-marca);
+  background: rgba(24, 138, 85, 0.08);
+  border: 1px solid rgba(24, 138, 85, 0.2);
+  border-radius: 8px;
+  padding: 6px 10px;
+  text-align: center;
+  width: 100%;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-abrir-reposicao:hover {
+  background: rgba(24, 138, 85, 0.15);
+}
+
+.btn-nova-lista-topo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 14px;
+  background: linear-gradient(135deg, var(--cor-marca) 0%, #15803d 100%);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 3px 10px rgba(24, 138, 85, 0.3);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.btn-nova-lista-topo:active {
+  transform: scale(0.97);
+}
+
+.tabs-listas-container {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 4px;
+  border-radius: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.tab-lista-btn {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  padding: 8px 4px;
+  font-weight: 700;
+  font-size: 12.5px;
+  border-radius: 9px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+@media (max-width: 380px) {
+  .tab-lista-btn {
+    font-size: 11.5px;
+    padding: 7px 2px;
+  }
+}
+
+.linha-acoes-compras-centro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.btn-wakelock-centro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--bg-card-subtle, rgba(0, 0, 0, 0.05));
+  border: 1px solid var(--borda-padrao);
+  color: var(--texto-principal);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-wakelock-centro.ativo {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: #f59e0b;
+  color: #b45309;
+}
+
+.btn-voz-centro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s;
+}
+
+.btn-voz-centro:active {
+  transform: scale(0.96);
+}
+

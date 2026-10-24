@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-mercado-v12-live';
+const CACHE_NAME = 'meu-mercado-v13-live';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

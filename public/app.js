@@ -389,10 +389,10 @@ window.alternarReposicaoDespensa = function() {
   const estaAberto = conteudo.style.display !== 'none';
   if (estaAberto) {
     conteudo.style.display = 'none';
-    if (seta) seta.textContent = '▼ Toque para abrir';
+    if (seta) seta.textContent = '▼ Toque para abrir sugestões';
   } else {
     conteudo.style.display = 'block';
-    if (seta) seta.textContent = '▲ Recolher';
+    if (seta) seta.textContent = '▲ Toque para recolher sugestões';
   }
 };
 
@@ -1483,8 +1483,10 @@ function renderizarTelaListas() {
 
   const badgeAbertas = document.getElementById('contListasAbertas');
   const badgeFechadas = document.getElementById('contListasFechadas');
+  const badgeTodas = document.getElementById('contListasTodas');
   if (badgeAbertas) badgeAbertas.textContent = abertas.length;
   if (badgeFechadas) badgeFechadas.textContent = fechadas.length;
+  if (badgeTodas) badgeTodas.textContent = appState.listas.length;
 
   let listasParaExibir = appState.listas;
   if (abaListasFiltro === 'abertas') {
@@ -2658,7 +2660,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.tentarEnviarFilaOffline();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261023_v12').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261023_v13').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }

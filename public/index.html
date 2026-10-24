@@ -44,7 +44,7 @@
           <span class="marca-icone">🛒</span>
           <div class="marca-titulos">
             <span class="marca-nome">Meu Mercado</span>
-            <span class="marca-sub">Nuvem Direta • v3.6</span>
+            <span class="marca-sub">Nuvem Direta • v3.7</span>
           </div>
         </div>
       </div>
@@ -121,17 +121,24 @@
           </div>
         </div>
 
-        <!-- Reposição Inteligente da Despensa (Card Retrátil / Acordeom) -->
+        <!-- Reposição Inteligente da Despensa (Card Retrátil em 3 Linhas Limpas) -->
         <div class="card-reposicao-despensa" id="cardReposicaoDespensa">
           <div class="reposicao-cabecalho" onclick="alternarReposicaoDespensa()" style="cursor: pointer; margin-bottom: 0;">
-            <div style="flex: 1;">
-              <div class="reposicao-titulo" style="display: flex; align-items: center; justify-content: space-between;">
-                <span>💡 O que está faltando em casa?</span>
-                <span id="setaReposicaoDespensa" style="font-size: 12px; color: var(--cor-marca); font-weight: 700; padding: 2px 8px; background: rgba(0,0,0,0.06); border-radius: 8px;">▼ Toque para abrir</span>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+              <!-- Linha 1: Título e Tag Despensa -->
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 15px; font-weight: 800; color: var(--texto-principal);">💡 O que está faltando em casa?</span>
+                <span class="badge-despensa-tag">Despensa</span>
               </div>
-              <div class="reposicao-sub">Sugestões rápidas de reposição da despensa</div>
+              <!-- Linha 2: Subtítulo descritivo -->
+              <div class="reposicao-sub" style="font-size: 12px; color: var(--texto-secundario); margin: 2px 0 6px 0;">
+                Sugestões rápidas de reposição para a sua despensa
+              </div>
+              <!-- Linha 3: Botão de Ação Destacado em linha única -->
+              <div id="setaReposicaoDespensa" class="btn-abrir-reposicao">
+                ▼ Toque para abrir sugestões
+              </div>
             </div>
-            <span class="badge-despensa-tag" style="margin-left: 8px;">Despensa</span>
           </div>
 
           <!-- Conteúdo recolhido por padrão (abre ao clicar) -->
@@ -231,18 +238,20 @@
             <span id="badgeStatusLista" class="badge-status-ativa">Aberta</span>
           </div>
 
-          <div class="linha-sub-seletor">
+          <div style="text-align: center; margin-top: 5px;">
             <div id="dataListaAtiva" class="data-criacao-lista">📅 Criada em 21/10/2026</div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <button id="btnWakeLockMercado" class="btn-wakelock" onclick="alternarModoMercado()" title="Manter tela do celular sempre acesa durante as compras">
-                <span id="iconeWakeLock">💡</span>
-                <span id="textoWakeLock">Tela Ativa</span>
-              </button>
-              <button class="btn-item-voz-moderno" onclick="abrirModalVozCompleta()" title="Adicionar item falando nome, quantidade e preço de uma vez só">
-                <span class="icone-mic-glow">🎙️</span>
-                <span>Item por voz</span>
-              </button>
-            </div>
+          </div>
+
+          <!-- Ações Centralizadas e Destacadas: Tela Ativa + Item por Voz -->
+          <div class="linha-acoes-compras-centro">
+            <button id="btnWakeLockMercado" class="btn-wakelock-centro" onclick="alternarModoMercado()" title="Manter tela do celular sempre acesa durante as compras">
+              <span id="iconeWakeLock">💡</span>
+              <span id="textoWakeLock">Tela Ativa</span>
+            </button>
+            <button class="btn-voz-centro" onclick="abrirModalVozCompleta()" title="Adicionar item falando nome, quantidade e preço de uma vez só">
+              <span class="icone-mic-glow">🎙️</span>
+              <span>Item por voz</span>
+            </button>
           </div>
         </div>
 
@@ -302,13 +311,13 @@
            4. TELA LISTAS (GERENCIAMENTO DE MÚLTIPLAS LISTAS)
       =============================================================== -->
       <section id="telaListas" class="tela">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 8px;">
           <div>
-            <h2 style="font-size: 18px; font-weight: 800;">📋 Minhas Listas</h2>
-            <p style="font-size: 12px; color: var(--texto-secundario);">Toque em qualquer lista para abrir e fazer as compras.</p>
+            <h2 style="font-size: 18px; font-weight: 800; margin: 0 0 3px 0;">📋 Minhas Listas</h2>
+            <p style="font-size: 12px; color: var(--texto-secundario); margin: 0;">Toque em qualquer lista para abrir e fazer as compras.</p>
           </div>
-          <button class="btn-qtd" style="width: auto; padding: 8px 16px; background: var(--cor-marca); color: #fff; font-size: 13px;" onclick="abrirModalNovaLista()">
-            + Nova Lista
+          <button class="btn-nova-lista-topo" onclick="abrirModalNovaLista()">
+            <span>+ Nova Lista</span>
           </button>
         </div>
 
@@ -321,16 +330,16 @@
           <span style="font-size: 11px; background: #10b981; color: #ffffff; padding: 2px 8px; border-radius: 12px; font-weight: 800; letter-spacing: -0.2px;">Automática ✓</span>
         </div>
 
-        <!-- Filtro de Abas: Listas Abertas vs Listas Fechadas (Histórico) -->
-        <div style="display: flex; gap: 8px; margin-bottom: 14px; background: rgba(0,0,0,0.06); padding: 4px; border-radius: 12px;">
-          <button id="btnAbaListasAbertas" class="corredor-pill ativo" style="flex: 1; text-align: center; padding: 8px 10px; font-weight: 800; font-size: 13px; border-radius: 9px;" onclick="filtrarAbaListas('abertas', this)">
+        <!-- Filtro de Abas: Listas Abertas vs Listas Fechadas vs Todas (100% Responsivo no Celular) -->
+        <div class="tabs-listas-container">
+          <button id="btnAbaListasAbertas" class="corredor-pill ativo tab-lista-btn" onclick="filtrarAbaListas('abertas', this)">
             📋 Abertas (<span id="contListasAbertas">0</span>)
           </button>
-          <button id="btnAbaListasFechadas" class="corredor-pill" style="flex: 1; text-align: center; padding: 8px 10px; font-weight: 800; font-size: 13px; border-radius: 9px;" onclick="filtrarAbaListas('fechadas', this)">
-            🔒 Fechadas / Histórico (<span id="contListasFechadas">0</span>)
+          <button id="btnAbaListasFechadas" class="corredor-pill tab-lista-btn" onclick="filtrarAbaListas('fechadas', this)">
+            🔒 Fechadas (<span id="contListasFechadas">0</span>)
           </button>
-          <button id="btnAbaListasTodas" class="corredor-pill" style="padding: 8px 10px; font-weight: 800; font-size: 13px; border-radius: 9px;" onclick="filtrarAbaListas('todas', this)">
-            Todas
+          <button id="btnAbaListasTodas" class="corredor-pill tab-lista-btn" onclick="filtrarAbaListas('todas', this)">
+            Todas (<span id="contListasTodas">0</span>)
           </button>
         </div>
 
@@ -806,7 +815,7 @@
       if ('caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
-            if (name !== 'meu-mercado-v12-live') {
+            if (name !== 'meu-mercado-v13-live') {
               caches.delete(name);
             }
           }
@@ -814,7 +823,7 @@
       }
     }
   </script>
-  <script src="/audio.js?v=20261023_v12"></script>
-  <script src="/app.js?v=20261023_v12"></script>
+  <script src="/audio.js?v=20261023_v13"></script>
+  <script src="/app.js?v=20261023_v13"></script>
 </body>
 </html>
