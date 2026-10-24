@@ -161,9 +161,10 @@ html, body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding-bottom: 96px;
+  padding-bottom: 140px;
   position: relative;
   background-color: var(--bg-primary);
+  box-sizing: border-box;
 }
 
 /* ============================================================================
@@ -339,6 +340,8 @@ html, body {
   font-size: 13px;
   font-weight: 700;
   margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .termometro-perc-badge {
@@ -717,24 +720,26 @@ html, body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding-top: 4px;
+  padding-top: 6px;
   border-top: 1px dashed var(--borda-suave);
+  flex-wrap: wrap;
 }
 
 .btn-item-voz-moderno {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
+  gap: 5px;
+  padding: 5px 11px;
   border-radius: var(--raio-full);
   background: linear-gradient(135deg, #188a55 0%, #10633c 100%);
   color: #ffffff;
   border: none;
-  font-size: 13px;
+  font-size: 11.5px;
   font-weight: 800;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(24, 138, 85, 0.3);
   transition: transform 0.15s ease;
+  white-space: nowrap;
 }
 
 .btn-item-voz-moderno:active {
@@ -1788,4 +1793,94 @@ body.tema-escuro .dica-voz-box {
   border-color: #34d399;
   color: #ffffff;
   box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
+}
+
+/* ============================================================================
+   RESPONSIVIDADE PREMIUM MOBILE (TELAS DE CELULAR 320PX A 440PX)
+   Zero encavalamento, zero corte de texto, proporções fluidas e limpas
+============================================================================ */
+@media (max-width: 440px) {
+  .conteudo-telas {
+    padding: 10px 12px;
+  }
+
+  .item-card {
+    padding: 10px 8px;
+    gap: 6px;
+  }
+
+  .item-nome {
+    font-size: 13.5px;
+    max-width: 140px;
+  }
+
+  .item-preco-tag {
+    min-width: 50px;
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .btn-qtd {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .qtd-valor {
+    font-size: 11px;
+    min-width: 14px;
+  }
+
+  .btn-mic-item {
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
+
+  .termometro-orcamento {
+    margin: 8px 12px 4px 12px;
+    padding: 10px 12px 8px 12px;
+  }
+
+  .termometro-gasto {
+    font-size: 15px;
+  }
+
+  .termometro-meta {
+    font-size: 11px;
+  }
+
+  .barra-selecao-lista {
+    padding: 10px 12px;
+  }
+
+  .seletor-lista-dropdown {
+    font-size: 13.5px;
+    padding: 5px 8px;
+  }
+
+  .card-preparar-lista, .card-fazer-compras {
+    padding: 16px 14px;
+    gap: 12px;
+  }
+
+  .card-icone-redondo {
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .navegacao {
+    height: 64px;
+  }
+
+  .icone-circulo-destaque {
+    width: 48px;
+    height: 48px;
+    margin-top: -16px;
+  }
+
+  .nav-icone-compras {
+    font-size: 24px;
+  }
 }
