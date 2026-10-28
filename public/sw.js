@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-mercado-v13-live';
+const CACHE_NAME = 'meu-mercado-v14-cloudsync';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -21,8 +21,17 @@ self.addEventListener('activate', (e) => {
 });
 
 // Network-First: Sempre busca a versão mais recente do servidor
+// Bypassa chamadas do Firestore e APIs externas para sincronização em tempo real
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
+  if (
+    e.request.method !== 'GET' ||
+    e.request.url.includes('firestore.googleapis.com') ||
+    e.request.url.includes('gstatic.com') ||
+    e.request.url.includes('google.com')
+  ) {
+    return;
+  }
+  
   e.respondWith(
     fetch(e.request)
       .then((res) => {

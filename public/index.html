@@ -34,17 +34,20 @@
             <span id="topoNomeUsuario">Fábio Lucena</span>
             <small style="font-size: 10px; opacity: 0.8;">▼</small>
           </div>
-          <span id="topoPapelUsuario" class="topo-papel">Administrador 👑</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span id="topoPapelUsuario" class="topo-papel">Administrador 👑</span>
+            <span id="indicadorNuvemPequeno" class="badge-nuvem-topo" onclick="event.stopPropagation(); window.forcarSincronizacaoNuvem();" title="Sincronização Nuvem em tempo real - Clique para sincronizar agora">🟢 Nuvem</span>
+          </div>
         </div>
       </div>
 
       <!-- Marca Centralizada / Preenche o Espaço com Elegância -->
       <div class="topo-marca-centro">
-        <div class="marca-badge">
+        <div class="marca-badge" onclick="window.forcarSincronizacaoNuvem()" style="cursor: pointer;" title="Sincronização Nuvem em Tempo Real">
           <span class="marca-icone">🛒</span>
           <div class="marca-titulos">
             <span class="marca-nome">Meu Mercado</span>
-            <span class="marca-sub">Nuvem Direta • v3.7</span>
+            <span id="marcaSubStatus" class="marca-sub">🟢 Nuvem Ao Vivo</span>
           </div>
         </div>
       </div>
@@ -815,7 +818,7 @@
       if ('caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
-            if (name !== 'meu-mercado-v13-live') {
+            if (name !== 'meu-mercado-v14-cloudsync') {
               caches.delete(name);
             }
           }
@@ -823,7 +826,10 @@
       }
     }
   </script>
-  <script src="/audio.js?v=20261023_v13"></script>
-  <script src="/app.js?v=20261023_v13"></script>
+  <!-- Firebase App & Firestore Compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="/audio.js?v=20261028_v14"></script>
+  <script src="/app.js?v=20261028_v14"></script>
 </body>
 </html>

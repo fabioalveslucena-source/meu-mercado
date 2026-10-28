@@ -1,0 +1,27 @@
+{
+  "name": "meu-mercado",
+  "version": "2.4.0",
+  "description": "Meu Mercado - PWA Inteligente de Compras com Reconhecimento de Voz e Integração Financeira",
+  "scripts": {
+    "start": "live-server public --port=3000 --cors --wait=200",
+    "dev": "live-server public --port=3000 --cors --wait=200",
+    "preview": "serve public -l 3000",
+    "serve:firebase": "firebase serve --only hosting",
+    "deploy": "firebase deploy --only hosting",
+    "deploy:all": "firebase deploy"
+  },
+  "keywords": [
+    "pwa",
+    "shopping-list",
+    "speech-recognition",
+    "firebase-hosting",
+    "google-apps-script"
+  ],
+  "author": "Fábio Alves Lucena",
+  "license": "ISC",
+  "devDependencies": {
+    "firebase-tools": "^13.31.0",
+    "live-server": "^1.2.2",
+    "serve": "^14.2.4"
+  }
+}

@@ -14,7 +14,11 @@
 const CONFIG = {
   GAS_WEBAPP_URL: 'https://script.google.com/macros/s/AKfycbyVzn-uiAsqoXOxDGDqeVTTr3pFWPEc6SfqmiTH8j3YTAnr4MPrKRAXtQjbPI7VHp3x9w/exec',
   FINANCEIRO_URL: 'https://meu-financeiro-39138.web.app',
-  STORAGE_PREFIX: 'meu_mercado_v2_4_'
+  STORAGE_PREFIX: 'meu_mercado_v2_4_',
+  FIREBASE_PROJECT_ID: 'meu-financeiro-39138',
+  FIREBASE_API_KEY: 'AIzaSyCEzAq8ydMnDV1BDkCNLYXQNZVnu9ZKrXU',
+  USER_ID: 'fabio-master-uid',
+  DOC_PATH: 'usuarios/fabio-master-uid/meu_mercado_dados/estado'
 };
 
 // ============================================================================
@@ -145,15 +149,363 @@ let dadosItemOuvidoDetectados = null;
 let itemEditandoQtdId = null;
 
 // ============================================================================
+// IDENTIFICAÇÃO DO DISPOSITIVO & SINCRONIZAÇÃO EM NUVEM (FIRESTORE)
+// ============================================================================
+let MEU_DEVICE_ID = localStorage.getItem('mm_device_id');
+if (!MEU_DEVICE_ID) {
+  MEU_DEVICE_ID = 'dev_' + Math.random().toString(36).substring(2, 9) + '_' + Date.now();
+  localStorage.setItem('mm_device_id', MEU_DEVICE_ID);
+}
+
+let syncTimeout = null;
+let estaSincronizando = false;
+let ultimaVersaoNuvemProcessada = 0;
+let dbFirestore = null;
+let listenerNuvemAtivo = false;
+let statusConexaoNuvem = 'online'; // 'online', 'sincronizando', 'offline'
+
+function atualizarIndicadorNuvem(status, texto) {
+  statusConexaoNuvem = status;
+  const badgePequeno = document.getElementById('indicadorNuvemPequeno');
+  const marcaSub = document.getElementById('marcaSubStatus');
+
+  let icone = '🟢';
+  let classe = '';
+  let textoFinal = texto || 'Nuvem Ao Vivo';
+
+  if (status === 'sincronizando') {
+    icone = '🔄';
+    classe = 'sincronizando';
+    textoFinal = texto || 'Sincronizando...';
+  } else if (status === 'offline') {
+    icone = '📴';
+    classe = 'offline';
+    textoFinal = texto || 'Offline';
+  } else {
+    icone = '🟢';
+    classe = '';
+    textoFinal = texto || 'Nuvem Ao Vivo';
+  }
+
+  if (badgePequeno) {
+    badgePequeno.className = 'badge-nuvem-topo ' + classe;
+    badgePequeno.innerHTML = `${icone} ${status === 'sincronizando' ? 'Sync...' : (status === 'offline' ? 'Offline' : 'Ao Vivo')}`;
+  }
+
+  if (marcaSub) {
+    marcaSub.innerHTML = `${icone} ${textoFinal}`;
+  }
+}
+
+function obterNomeUsuarioAtivo() {
+  const u = appState.usuariosFamilia?.find(x => x.id === appState.usuarioAtivoId);
+  return u ? u.nome : 'Família';
+}
+
+function extrairDadosCompartilhados() {
+  return {
+    listas: appState.listas || [],
+    itens: appState.itens || [],
+    produtosCatalogo: appState.produtosCatalogo || [],
+    historico: appState.historico || [],
+    usuariosFamilia: appState.usuariosFamilia || [],
+    listaAtivaId: appState.listaAtivaId || 'lst_1'
+  };
+}
+
+// ============================================================================
 // PERSISTÊNCIA & INICIALIZAÇÃO
 // ============================================================================
-function salvarLocal() {
+function salvarLocalSilencioso() {
   try {
     localStorage.setItem(CONFIG.STORAGE_PREFIX + 'state', JSON.stringify(appState));
   } catch (e) {
     console.warn('Erro ao salvar local:', e);
   }
 }
+
+function salvarLocal() {
+  salvarLocalSilencioso();
+  agendarEnvioParaNuvem();
+}
+
+function agendarEnvioParaNuvem(delayMs = 400) {
+  if (syncTimeout) clearTimeout(syncTimeout);
+  atualizarIndicadorNuvem('sincronizando', 'Sincronizando...');
+  syncTimeout = setTimeout(() => {
+    enviarEstadoParaNuvem();
+  }, delayMs);
+}
+
+async function enviarEstadoParaNuvem() {
+  if (!navigator.onLine) {
+    atualizarIndicadorNuvem('offline', 'Modo Offline');
+    return false;
+  }
+
+  estaSincronizando = true;
+  const agoraTimestamp = Date.now();
+  ultimaVersaoNuvemProcessada = agoraTimestamp;
+
+  const dadosCompartilhados = extrairDadosCompartilhados();
+  const jsonString = JSON.stringify(dadosCompartilhados);
+  const nomeUsuario = obterNomeUsuarioAtivo();
+
+  let salvouComSucesso = false;
+
+  // 1. Tenta salvar via Firestore SDK
+  if (dbFirestore) {
+    try {
+      await dbFirestore.collection('usuarios').doc(CONFIG.USER_ID).collection('meu_mercado_dados').doc('estado').set({
+        dadosJson: jsonString,
+        atualizadoEm: new Date().toISOString(),
+        modificadoPor: nomeUsuario,
+        deviceId: MEU_DEVICE_ID,
+        versao: agoraTimestamp
+      });
+      salvouComSucesso = true;
+    } catch (errSdk) {
+      console.warn('Falha no SDK Firestore ao gravar, tentando via REST:', errSdk);
+    }
+  }
+
+  // 2. Se SDK não estava pronto ou falhou, usa a REST API do Firestore
+  if (!salvouComSucesso) {
+    try {
+      const url = `https://firestore.googleapis.com/v1/projects/${CONFIG.FIREBASE_PROJECT_ID}/databases/(default)/documents/${CONFIG.DOC_PATH}`;
+      const payload = {
+        fields: {
+          dadosJson: { stringValue: jsonString },
+          atualizadoEm: { stringValue: new Date().toISOString() },
+          modificadoPor: { stringValue: nomeUsuario },
+          deviceId: { stringValue: MEU_DEVICE_ID },
+          versao: { integerValue: String(agoraTimestamp) }
+        }
+      };
+
+      const res = await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        salvouComSucesso = true;
+      }
+    } catch (errRest) {
+      console.warn('Erro ao salvar no Firestore via REST:', errRest);
+    }
+  }
+
+  estaSincronizando = false;
+  if (salvouComSucesso) {
+    atualizarIndicadorNuvem('online', 'Nuvem Ao Vivo');
+  } else {
+    atualizarIndicadorNuvem('offline', 'Falha na Nuvem (Salvo Local)');
+  }
+  return salvouComSucesso;
+}
+
+function aplicarDadosNuvem(dadosNuvem, remoteMeta) {
+  if (!dadosNuvem) return;
+
+  // Evita sobrescrever o que este mesmo aparelho acabou de enviar
+  if (remoteMeta && remoteMeta.deviceId === MEU_DEVICE_ID) {
+    return;
+  }
+
+  const versaoRemota = Number(remoteMeta?.versao) || 0;
+  if (versaoRemota && versaoRemota <= ultimaVersaoNuvemProcessada) {
+    return;
+  }
+  if (versaoRemota) {
+    ultimaVersaoNuvemProcessada = versaoRemota;
+  }
+
+  console.log('☁️ Sincronização: aplicando dados alterados por:', remoteMeta?.modificadoPor || 'outro aparelho');
+
+  // Mescla dados compartilhados (mantendo o perfil ativo e o tema deste aparelho)
+  if (Array.isArray(dadosNuvem.listas)) appState.listas = dadosNuvem.listas;
+  if (Array.isArray(dadosNuvem.itens)) appState.itens = dadosNuvem.itens;
+  if (Array.isArray(dadosNuvem.produtosCatalogo)) appState.produtosCatalogo = dadosNuvem.produtosCatalogo;
+  if (Array.isArray(dadosNuvem.historico)) appState.historico = dadosNuvem.historico;
+  if (Array.isArray(dadosNuvem.usuariosFamilia)) appState.usuariosFamilia = dadosNuvem.usuariosFamilia;
+
+  if (dadosNuvem.listaAtivaId && appState.listas.some(l => l.id === dadosNuvem.listaAtivaId)) {
+    if (!appState.listas.some(l => l.id === appState.listaAtivaId)) {
+      appState.listaAtivaId = dadosNuvem.listaAtivaId;
+    }
+  }
+
+  // Persiste localmente neste aparelho sem re-disparar envio para a nuvem
+  salvarLocalSilencioso();
+
+  // Re-renderiza a interface imediatamente
+  renderizarCabecalhoPerfil();
+  renderizarTermometro();
+  renderizarTelaInicio();
+  renderizarTelaCompras();
+  renderizarTelaListas();
+
+  atualizarIndicadorNuvem('online', 'Nuvem Ao Vivo');
+
+  if (remoteMeta && remoteMeta.modificadoPor) {
+    window.mostrarToastMercado(`🔄 Atualizado por ${remoteMeta.modificadoPor}`, 'info', 2500);
+  }
+}
+
+async function buscarEstadoNuvem() {
+  if (!navigator.onLine) {
+    atualizarIndicadorNuvem('offline', 'Modo Offline');
+    return null;
+  }
+
+  // 1. Via SDK Firestore
+  if (dbFirestore) {
+    try {
+      const snap = await dbFirestore.collection('usuarios').doc(CONFIG.USER_ID).collection('meu_mercado_dados').doc('estado').get();
+      if (snap.exists) {
+        const data = snap.data();
+        if (data.dadosJson) {
+          const dados = JSON.parse(data.dadosJson);
+          return {
+            dados,
+            meta: {
+              deviceId: data.deviceId,
+              versao: data.versao,
+              modificadoPor: data.modificadoPor
+            }
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('Falha na busca pelo SDK, tentando REST:', e);
+    }
+  }
+
+  // 2. Via REST API
+  try {
+    const url = `https://firestore.googleapis.com/v1/projects/${CONFIG.FIREBASE_PROJECT_ID}/databases/(default)/documents/${CONFIG.DOC_PATH}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      const fields = data.fields || {};
+      const dadosJson = fields.dadosJson?.stringValue;
+      if (dadosJson) {
+        const dados = JSON.parse(dadosJson);
+        const meta = {
+          deviceId: fields.deviceId?.stringValue || '',
+          versao: Number(fields.versao?.integerValue || fields.versao?.stringValue || 0),
+          modificadoPor: fields.modificadoPor?.stringValue || ''
+        };
+        return { dados, meta };
+      }
+    }
+  } catch (err) {
+    console.warn('Erro ao buscar estado da nuvem via REST:', err);
+  }
+
+  return null;
+}
+
+async function verificarAtualizacoesNuvem() {
+  try {
+    const estadoRemoto = await buscarEstadoNuvem();
+    if (estadoRemoto && estadoRemoto.dados) {
+      aplicarDadosNuvem(estadoRemoto.dados, estadoRemoto.meta);
+    }
+  } catch (err) {
+    console.warn('Erro ao verificar atualizações de nuvem:', err);
+  }
+}
+
+async function iniciarSincronizacaoNuvem() {
+  atualizarIndicadorNuvem('sincronizando', 'Conectando à nuvem...');
+
+  // Inicializa SDK se carregado
+  if (typeof firebase !== 'undefined') {
+    try {
+      if (!firebase.apps.length) {
+        firebase.initializeApp({
+          apiKey: CONFIG.FIREBASE_API_KEY,
+          authDomain: `${CONFIG.FIREBASE_PROJECT_ID}.firebaseapp.com`,
+          projectId: CONFIG.FIREBASE_PROJECT_ID
+        });
+      }
+      dbFirestore = firebase.firestore();
+
+      // Listener em tempo real via onSnapshot!
+      dbFirestore.collection('usuarios').doc(CONFIG.USER_ID).collection('meu_mercado_dados').doc('estado')
+        .onSnapshot((docSnapshot) => {
+          if (docSnapshot.exists) {
+            const data = docSnapshot.data();
+            if (data && data.dadosJson) {
+              try {
+                const dados = JSON.parse(data.dadosJson);
+                aplicarDadosNuvem(dados, {
+                  deviceId: data.deviceId,
+                  versao: data.versao,
+                  modificadoPor: data.modificadoPor
+                });
+              } catch (parseErr) {
+                console.error('Erro ao interpretar dados do snapshot:', parseErr);
+              }
+            }
+          }
+        }, (err) => {
+          console.warn('Aviso no listener Firestore:', err);
+          atualizarIndicadorNuvem('offline', 'Conexão oscilando');
+        });
+
+      listenerNuvemAtivo = true;
+      console.log('⚡ Sincronização em tempo real do Firestore ATIVADA!');
+    } catch (e) {
+      console.warn('Não foi possível inicializar SDK Firebase, mantendo modo REST:', e);
+    }
+  }
+
+  // Busca inicial imediata
+  const estadoRemoto = await buscarEstadoNuvem();
+  if (estadoRemoto && estadoRemoto.dados) {
+    aplicarDadosNuvem(estadoRemoto.dados, estadoRemoto.meta);
+  } else {
+    // Se o documento na nuvem ainda não existe, cria com o estado inicial
+    console.log('☁️ Documento na nuvem inicializado com os dados atuais.');
+    await enviarEstadoParaNuvem();
+  }
+
+  atualizarIndicadorNuvem('online', 'Nuvem Ao Vivo');
+
+  // Monitora retorno ao app (quando desbloqueia o celular ou troca de aba)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      verificarAtualizacoesNuvem();
+    }
+  });
+
+  window.addEventListener('focus', () => {
+    verificarAtualizacoesNuvem();
+  });
+
+  // Polling de segurança a cada 5 segundos
+  setInterval(() => {
+    if (!document.hidden && navigator.onLine && !estaSincronizando) {
+      verificarAtualizacoesNuvem();
+    }
+  }, 5000);
+}
+
+window.forcarSincronizacaoNuvem = async function() {
+  window.mostrarToastMercado('🔄 Sincronizando com a nuvem...', 'info', 2000);
+  atualizarIndicadorNuvem('sincronizando', 'Sincronizando...');
+  const ok = await enviarEstadoParaNuvem();
+  await verificarAtualizacoesNuvem();
+  if (ok) {
+    window.mostrarToastMercado('✅ Nuvem 100% atualizada!', 'sucesso', 2500);
+  } else {
+    window.mostrarToastMercado('⚠️ Modo offline. Seus dados estão salvos no aparelho!', 'alerta', 3500);
+  }
+};
 
 function carregarLocal() {
   try {
@@ -2646,8 +2998,16 @@ window.tentarEnviarFilaOffline = async function() {
 };
 
 window.addEventListener('online', () => {
-  window.mostrarToastMercado('Conexão restabelecida! Sincronizando compras pendentes...', 'info');
+  window.mostrarToastMercado('🟢 Conexão restabelecida! Sincronizando com a nuvem...', 'sucesso', 3000);
+  atualizarIndicadorNuvem('online', 'Nuvem Ao Vivo');
+  enviarEstadoParaNuvem();
+  verificarAtualizacoesNuvem();
   window.tentarEnviarFilaOffline();
+});
+
+window.addEventListener('offline', () => {
+  window.mostrarToastMercado('📴 Modo offline ativado. Seus dados continuam salvos no aparelho!', 'alerta', 4000);
+  atualizarIndicadorNuvem('offline', 'Modo Offline');
 });
 
 // ============================================================================
@@ -2657,10 +3017,11 @@ document.addEventListener('DOMContentLoaded', () => {
   carregarLocal();
   aplicarTema();
   renderizarTudo();
+  iniciarSincronizacaoNuvem();
   window.tentarEnviarFilaOffline();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261023_v13').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261028_v14').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }
