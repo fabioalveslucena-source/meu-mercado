@@ -331,21 +331,18 @@ function aplicarDadosNuvem(dadosNuvem, remoteMeta) {
   if (Array.isArray(dadosNuvem.historico)) appState.historico = dadosNuvem.historico;
   if (Array.isArray(dadosNuvem.usuariosFamilia)) appState.usuariosFamilia = dadosNuvem.usuariosFamilia;
 
+  // Sincroniza a lista ativa com o que foi atualizado na nuvem pela família
   if (dadosNuvem.listaAtivaId && appState.listas.some(l => l.id === dadosNuvem.listaAtivaId)) {
-    if (!appState.listas.some(l => l.id === appState.listaAtivaId)) {
-      appState.listaAtivaId = dadosNuvem.listaAtivaId;
-    }
+    appState.listaAtivaId = dadosNuvem.listaAtivaId;
+  } else if (!appState.listas.some(l => l.id === appState.listaAtivaId) && appState.listas.length > 0) {
+    appState.listaAtivaId = appState.listas[0].id;
   }
 
   // Persiste localmente neste aparelho sem re-disparar envio para a nuvem
   salvarLocalSilencioso();
 
-  // Re-renderiza a interface imediatamente
-  renderizarCabecalhoPerfil();
-  renderizarTermometro();
-  renderizarTelaInicio();
-  renderizarTelaCompras();
-  renderizarTelaListas();
+  // Re-renderiza a interface imediatamente com os novos dados
+  renderizarTudoSilencioso();
 
   atualizarIndicadorNuvem('online', 'Nuvem Ao Vivo');
 
@@ -579,9 +576,12 @@ function calcularTotais(idLista = appState.listaAtivaId) {
   let itensComprados = 0;
 
   itens.forEach(item => {
-    const subtotal = (Number(item.quantidade) || 1) * (Number(item.precoUnitario) || 0);
+    const qtd = Number(item.quantidade) || 1;
+    const unit = Number(item.precoUnitario) || 0;
+    const subtotal = qtd * unit;
     totalEstimado += subtotal;
-    if (item.comprado) {
+    const isComprado = item.comprado === true || String(item.comprado).toLowerCase() === 'true';
+    if (isComprado) {
       totalCarrinho += subtotal;
       itensComprados++;
     }
@@ -607,12 +607,16 @@ function calcularTotais(idLista = appState.listaAtivaId) {
 // ============================================================================
 // RENDERIZAÇÃO
 // ============================================================================
-function renderizarTudo() {
+function renderizarTudoSilencioso() {
   renderizarCabecalhoPerfil();
   renderizarTermometro();
   renderizarTelaInicio();
   renderizarTelaCompras();
   renderizarTelaListas();
+}
+
+function renderizarTudo() {
+  renderizarTudoSilencioso();
   salvarLocal();
 }
 
@@ -1162,6 +1166,7 @@ function renderizarTelaCompras() {
         🛒 ${l.nome}
       </option>
     `).join('');
+    seletorListas.value = appState.listaAtivaId;
   }
 
   // 2. Badge de Status (Aberta ou Fechada)
@@ -1308,6 +1313,10 @@ window.salvarNovaQuantidade = function() {
   if (!itemEditandoQtdId) return;
   const item = appState.itens.find(i => i.id === itemEditandoQtdId);
   if (!item) return;
+
+  if (item.idLista) {
+    appState.listaAtivaId = item.idLista;
+  }
 
   const input = document.getElementById('inputNovaQuantidade');
   const val = parseFloat(input?.value) || 1;
@@ -1793,6 +1802,10 @@ window.excluirItem = function(idItem) {
 window.alternarItem = function(idItem) {
   const item = appState.itens.find(i => i.id === idItem);
   if (!item) return;
+
+  if (item.idLista) {
+    appState.listaAtivaId = item.idLista;
+  }
 
   item.comprado = !item.comprado;
   if (item.comprado) window.SomMercado.bipItem();
@@ -2860,6 +2873,9 @@ window.confirmarTecladoPreco = function() {
     const cents = parseInt(appState.valorTecladoBuffer, 10) || 0;
     appState.itemSendoEditado.precoUnitario = cents / 100;
     appState.itemSendoEditado.comprado = true;
+    if (appState.itemSendoEditado.idLista) {
+      appState.listaAtivaId = appState.itemSendoEditado.idLista;
+    }
     window.SomMercado.bipItem();
   }
   fecharTecladoPreco();
@@ -3016,12 +3032,12 @@ window.addEventListener('offline', () => {
 document.addEventListener('DOMContentLoaded', () => {
   carregarLocal();
   aplicarTema();
-  renderizarTudo();
+  renderizarTudoSilencioso();
   iniciarSincronizacaoNuvem();
   window.tentarEnviarFilaOffline();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261028_v14').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261029_v15').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }

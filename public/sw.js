@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-mercado-v14-cloudsync';
+const CACHE_NAME = 'meu-mercado-v15-cartsync';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
