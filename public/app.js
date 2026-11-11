@@ -3047,7 +3047,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.tentarEnviarFilaOffline();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261110_v16').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261110_v17').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }

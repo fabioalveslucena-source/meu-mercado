@@ -47,6 +47,7 @@
   let cupomConferenciaState = null;
   let itemEditandoCategoriaIdx = null;
   let abortControllerAtivo = null;
+  let arquivoCupomPendente = null;
 
   // ============================================================================
   // UTILITÁRIOS DE SEGURANÇA, FORMATAÇÃO E CATEGORIA
@@ -135,7 +136,7 @@
     return String(doEnv || '').trim();
   };
 
-  function persistirChaveGemini(chaveLimpa) {
+  function persistirChaveGemini(chaveLimpa, sincronizarPerfilNuvem = true) {
     try {
       localStorage.setItem(STORAGE_KEY_GEMINI, chaveLimpa);
     } catch (_) {}
@@ -144,6 +145,92 @@
     }
     if (typeof salvarLocal === 'function') {
       salvarLocal();
+    }
+    if (sincronizarPerfilNuvem) {
+      salvarChaveGeminiPerfilNuvem(chaveLimpa);
+    }
+  }
+
+  async function buscarChaveGeminiPerfilNuvem() {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) return '';
+    const projectId = (typeof CONFIG !== 'undefined' && CONFIG.FIREBASE_PROJECT_ID) ? CONFIG.FIREBASE_PROJECT_ID : 'meu-financeiro-39138';
+    const userId = (typeof CONFIG !== 'undefined' && CONFIG.USER_ID) ? CONFIG.USER_ID : 'fabio-master-uid';
+    let chaveEncontrada = '';
+
+    // 1. Tenta via SDK Firestore (se inicializado em app.js)
+    try {
+      if (typeof dbFirestore !== 'undefined' && dbFirestore) {
+        const snap = await dbFirestore.collection('usuarios').doc(userId).collection('perfil').doc('dados').get();
+        if (snap.exists) {
+          const data = snap.data() || {};
+          if (typeof data.geminiApiKey === 'string' && data.geminiApiKey.trim()) {
+            chaveEncontrada = data.geminiApiKey.trim();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Falha ao buscar chave Gemini no perfil via SDK:', e);
+    }
+
+    // 2. Fallback via REST API do Firestore (mesmo projeto/usuário do Meu Financeiro)
+    if (!chaveEncontrada) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      try {
+        const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/usuarios/${userId}/perfil/dados`;
+        const res = await fetch(url, { method: 'GET', signal: controller.signal });
+        if (res.ok) {
+          const doc = await res.json();
+          const val = doc?.fields?.geminiApiKey?.stringValue;
+          if (typeof val === 'string' && val.trim()) {
+            chaveEncontrada = val.trim();
+          }
+        }
+      } catch (e) {
+        console.warn('Falha ao buscar chave Gemini no perfil via REST:', e);
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    if (chaveEncontrada) {
+      persistirChaveGemini(chaveEncontrada, false);
+      window.atualizarUIChaveGemini?.();
+    }
+    return chaveEncontrada;
+  }
+
+  async function salvarChaveGeminiPerfilNuvem(chaveLimpa) {
+    if (!chaveLimpa || (typeof navigator !== 'undefined' && !navigator.onLine)) return;
+    const projectId = (typeof CONFIG !== 'undefined' && CONFIG.FIREBASE_PROJECT_ID) ? CONFIG.FIREBASE_PROJECT_ID : 'meu-financeiro-39138';
+    const userId = (typeof CONFIG !== 'undefined' && CONFIG.USER_ID) ? CONFIG.USER_ID : 'fabio-master-uid';
+
+    try {
+      if (typeof dbFirestore !== 'undefined' && dbFirestore) {
+        await dbFirestore.collection('usuarios').doc(userId).collection('perfil').doc('dados').set({
+          geminiApiKey: chaveLimpa,
+          atualizadoEm: new Date().toISOString()
+        }, { merge: true });
+        return;
+      }
+    } catch (e) {
+      console.warn('Falha ao gravar chave no perfil via SDK, tentando REST:', e);
+    }
+
+    try {
+      const url = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/usuarios/${userId}/perfil/dados?updateMask.fieldPaths=geminiApiKey&updateMask.fieldPaths=atualizadoEm`;
+      await fetch(url, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            geminiApiKey: { stringValue: chaveLimpa },
+            atualizadoEm: { stringValue: new Date().toISOString() }
+          }
+        })
+      });
+    } catch (e) {
+      console.warn('Falha ao gravar chave no perfil via REST:', e);
     }
   }
 
@@ -237,10 +324,16 @@
 
     try {
       await validarChaveNaApiGemini(chave);
-      persistirChaveGemini(chave);
+      persistirChaveGemini(chave, true);
       window.atualizarUIChaveGemini();
       window.SomMercado?.bipItem?.();
       window.mostrarToastMercado?.('✅ Chave validada em tempo real e salva na nuvem!', 'sucesso', 3500);
+
+      if (origem === 'scanner' && arquivoCupomPendente) {
+        const pendente = arquivoCupomPendente;
+        arquivoCupomPendente = null;
+        await processarArquivoObjetoCupom(pendente);
+      }
     } catch (err) {
       console.warn('Falha ao validar chave Gemini:', err);
       const msg = err?.name === 'AbortError'
@@ -557,6 +650,7 @@ Formato JSON obrigatório:
   window.abrirModalCupomFiscal = function() {
     const modal = document.getElementById('modalCupomFiscal');
     if (!modal) return;
+    arquivoCupomPendente = null;
     definirCarregandoCupom(false);
     const inputCam = document.getElementById('inputFotoCupomCamera');
     const inputGal = document.getElementById('inputFotoCupomGaleria');
@@ -565,6 +659,10 @@ Formato JSON obrigatório:
 
     window.atualizarUIChaveGemini();
     modal.classList.add('aberto');
+
+    if (!window.obterChaveGemini()) {
+      buscarChaveGeminiPerfilNuvem();
+    }
   };
 
   window.fecharModalCupomFiscal = function() {
@@ -572,6 +670,7 @@ Formato JSON obrigatório:
       try { abortControllerAtivo.abort(); } catch (_) {}
       abortControllerAtivo = null;
     }
+    arquivoCupomPendente = null;
     definirCarregandoCupom(false);
     document.getElementById('modalCupomFiscal')?.classList.remove('aberto');
   };
@@ -585,16 +684,23 @@ Formato JSON obrigatório:
     if (areaUpload) areaUpload.style.display = ativo ? 'none' : 'flex';
   }
 
-  window.processarArquivoCupom = async function(event) {
-    const file = event?.target?.files?.[0];
+  async function processarArquivoObjetoCupom(file) {
     if (!file) return;
 
-    const chave = window.obterChaveGemini();
+    let chave = window.obterChaveGemini();
     if (!chave) {
+      definirCarregandoCupom(true, 'Verificando sua chave salva na nuvem...');
+      chave = await buscarChaveGeminiPerfilNuvem();
+    }
+
+    if (!chave) {
+      arquivoCupomPendente = file;
+      definirCarregandoCupom(false);
       window.atualizarUIChaveGemini();
       const box = document.getElementById('cupomBoxConfigChave');
       if (box) box.style.display = 'block';
-      window.mostrarToastMercado?.('Cole e valide sua chave da API antes de ler o cupom.', 'alerta', 4000);
+      window.mostrarToastMercado?.('📸 Foto pronta! Cole e valide sua chave abaixo para ler imediatamente.', 'alerta', 4500);
+      document.getElementById('inputChaveGeminiScanner')?.focus();
       return;
     }
 
@@ -611,6 +717,7 @@ Formato JSON obrigatório:
         throw new Error('Nenhum produto foi identificado nessa imagem. Tente uma foto mais nítida ou um print completo da SEFAZ.');
       }
 
+      arquivoCupomPendente = null;
       window.SomMercado?.bipItem?.();
       window.fecharModalCupomFiscal();
       abrirModalConferenciaCupom(dadosNormalizados);
@@ -621,6 +728,14 @@ Formato JSON obrigatório:
         : (err?.message || 'Não foi possível ler o cupom fiscal.');
       window.mostrarToastMercado?.(msg, 'erro', 5000);
       definirCarregandoCupom(false);
+    }
+  }
+
+  window.processarArquivoCupom = async function(event) {
+    const file = event?.target?.files?.[0];
+    if (!file) return;
+    try {
+      await processarArquivoObjetoCupom(file);
     } finally {
       if (event?.target) event.target.value = '';
     }
@@ -1018,4 +1133,14 @@ Formato JSON obrigatório:
     );
     cupomConferenciaState = null;
   };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      if (!window.obterChaveGemini()) {
+        buscarChaveGeminiPerfilNuvem();
+      } else {
+        window.atualizarUIChaveGemini?.();
+      }
+    }, 300);
+  });
 })();

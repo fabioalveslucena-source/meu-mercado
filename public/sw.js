@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-mercado-v16-cupom';
+const CACHE_NAME = 'meu-mercado-v17-cupom';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
