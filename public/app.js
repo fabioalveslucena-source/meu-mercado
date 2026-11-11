@@ -129,7 +129,8 @@ let appState = {
   corredorAtivo: 'todos',
   filtroDespensaAtivo: 'todos',
   itemSendoEditado: null,
-  valorTecladoBuffer: '0'
+  valorTecladoBuffer: '0',
+  geminiApiKey: ''
 };
 
 // Variáveis de Voz
@@ -209,7 +210,8 @@ function extrairDadosCompartilhados() {
     produtosCatalogo: appState.produtosCatalogo || [],
     historico: appState.historico || [],
     usuariosFamilia: appState.usuariosFamilia || [],
-    listaAtivaId: appState.listaAtivaId || 'lst_1'
+    listaAtivaId: appState.listaAtivaId || 'lst_1',
+    geminiApiKey: appState.geminiApiKey || ''
   };
 }
 
@@ -330,6 +332,13 @@ function aplicarDadosNuvem(dadosNuvem, remoteMeta) {
   if (Array.isArray(dadosNuvem.produtosCatalogo)) appState.produtosCatalogo = dadosNuvem.produtosCatalogo;
   if (Array.isArray(dadosNuvem.historico)) appState.historico = dadosNuvem.historico;
   if (Array.isArray(dadosNuvem.usuariosFamilia)) appState.usuariosFamilia = dadosNuvem.usuariosFamilia;
+  if (typeof dadosNuvem.geminiApiKey === 'string' && dadosNuvem.geminiApiKey.trim()) {
+    appState.geminiApiKey = dadosNuvem.geminiApiKey.trim();
+    try {
+      localStorage.setItem(CONFIG.STORAGE_PREFIX + 'gemini_api_key', appState.geminiApiKey);
+    } catch (_) {}
+    window.atualizarUIChaveGemini?.();
+  }
 
   // Sincroniza a lista ativa com o que foi atualizado na nuvem pela família
   if (dadosNuvem.listaAtivaId && appState.listas.some(l => l.id === dadosNuvem.listaAtivaId)) {
@@ -2731,6 +2740,7 @@ window.enviarCompraFechadaAoFinanceiro = async function() {
 // ============================================================================
 window.abrirModalPerfil = function() {
   renderizarListaUsuariosFamilia();
+  window.atualizarUIChaveGemini?.();
   const modal = document.getElementById('modalPerfil');
   if (modal) modal.classList.add('aberto');
 };
@@ -3037,7 +3047,7 @@ document.addEventListener('DOMContentLoaded', () => {
   window.tentarEnviarFilaOffline();
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js?v=20261029_v15').then(reg => {
+    navigator.serviceWorker.register('/sw.js?v=20261110_v16').then(reg => {
       reg.update();
     }).catch(err => console.log('SW:', err));
   }

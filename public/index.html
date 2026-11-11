@@ -122,6 +122,16 @@
             </div>
             <div style="font-size: 20px; font-weight: 800;">➔</div>
           </div>
+
+          <!-- Card 3: Ler Cupom Fiscal (Foto ou Print da SEFAZ) -->
+          <div class="card-ler-cupom" onclick="abrirModalCupomFiscal()">
+            <div class="card-icone-redondo">🧾</div>
+            <div style="flex: 1;">
+              <div style="font-size: 17px; font-weight: 800; margin-bottom: 2px;">Escanear Cupom Fiscal</div>
+              <div style="font-size: 13px; opacity: 0.9;">Lançar produtos por foto ou print da nota</div>
+            </div>
+            <div style="font-size: 20px; font-weight: 800;">➔</div>
+          </div>
         </div>
 
         <!-- Reposição Inteligente da Despensa (Card Retrátil em 3 Linhas Limpas) -->
@@ -255,6 +265,10 @@
               <span class="icone-mic-glow">🎙️</span>
               <span>Item por voz</span>
             </button>
+            <button class="btn-cupom-centro" onclick="abrirModalCupomFiscal()" title="Escanear cupom fiscal por foto ou print da SEFAZ">
+              <span>🧾</span>
+              <span>Cupom</span>
+            </button>
           </div>
         </div>
 
@@ -381,9 +395,26 @@
         </div>
 
         <!-- Upload de Foto Real do Usuário Ativo -->
-        <div style="margin-bottom: 18px;">
+        <div style="margin-bottom: 16px;">
           <label style="font-size: 12px; font-weight: 700; color: var(--texto-secundario); display: block; margin-bottom: 6px;">Alterar Foto Real do Usuário Ativo:</label>
           <input type="file" accept="image/*" onchange="carregarFotoAdminArquivo(event)" style="font-size: 12px;" />
+        </div>
+
+        <!-- Configuração da Chave da API (Leitor de Cupom Fiscal) -->
+        <div class="cupom-perfil-chave-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="font-size: 13px; font-weight: 800; color: var(--texto-principal);">🔑 Chave da API (Cupom Fiscal)</span>
+            <span id="statusChaveGeminiPerfil" class="cupom-status-chave pendente">Não configurada</span>
+          </div>
+          <p style="font-size: 11.5px; color: var(--texto-secundario); margin-bottom: 8px; line-height: 1.4;">
+            Cole sua chave do Google AI Studio (formatos <code>AQ...</code> ou <code>AIzaSy...</code>). Validada em tempo real e sincronizada na nuvem.
+          </p>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="inputChaveGeminiPerfil" class="campo-input-custom" style="flex: 1; min-width: 0; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--borda-padrao); font-size: 13px;" placeholder="AQ... ou AIzaSy..." autocomplete="off" />
+            <button type="button" id="btnSalvarChaveGeminiPerfil" class="btn-qtd" style="width: auto; padding: 8px 12px; background: var(--cor-marca); color: #fff; font-size: 12px; white-space: nowrap;" onclick="salvarChaveGemini('perfil')">
+              Validar e Salvar
+            </button>
+          </div>
         </div>
 
         <button class="btn-cancelar-modal" onclick="fecharModalPerfil()">
@@ -780,6 +811,207 @@
     </div>
 
     <!-- ==================================================================
+         MODAL 4: ESCANEAR CUPOM FISCAL (FOTO / PRINT SEFAZ - SEM IFRAME)
+    =================================================================== -->
+    <div id="modalCupomFiscal" class="modal-overlay">
+      <div class="modal-card cupom-modal-card">
+        <div class="recibo-topo">
+          <div class="recibo-icone">🧾</div>
+          <div class="recibo-titulo">Escanear Cupom Fiscal</div>
+          <div class="recibo-sub">Fotografe o cupom ou envie um print da tela da SEFAZ</div>
+        </div>
+
+        <!-- Configuração Rápida da Chave API (exibida se ausente ou ao clicar em Configurar) -->
+        <div id="cupomBoxConfigChave" class="cupom-config-chave-box" style="display: none;">
+          <div style="font-size: 12.5px; font-weight: 800; color: var(--texto-principal); margin-bottom: 4px;">
+            🔑 Chave do Google AI Studio
+          </div>
+          <div style="font-size: 11.5px; color: var(--texto-secundario); margin-bottom: 8px; line-height: 1.4;">
+            Aceita chaves no formato <code>AQ...</code> e <code>AIzaSy...</code>. Validada automaticamente ao salvar.
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <input type="password" id="inputChaveGeminiScanner" class="campo-input-custom" style="flex: 1; min-width: 0; padding: 9px 10px; border-radius: 8px; border: 1px solid var(--borda-padrao); font-size: 13px;" placeholder="Cole sua chave AQ... ou AIzaSy..." autocomplete="off" />
+            <button type="button" id="btnSalvarChaveGeminiScanner" class="btn-qtd" style="width: auto; padding: 8px 12px; background: var(--cor-marca); color: #fff; font-size: 12px; white-space: nowrap;" onclick="salvarChaveGemini('scanner')">
+              Validar e Salvar
+            </button>
+          </div>
+        </div>
+
+        <!-- Área de seleção de foto ou print -->
+        <div id="cupomAreaUpload" class="cupom-area-upload">
+          <input type="file" id="inputFotoCupomCamera" accept="image/*" capture="environment" style="display: none;" onchange="processarArquivoCupom(event)" />
+          <input type="file" id="inputFotoCupomGaleria" accept="image/*" style="display: none;" onchange="processarArquivoCupom(event)" />
+
+          <button type="button" class="cupom-btn-acao-upload primario" onclick="document.getElementById('inputFotoCupomCamera').click()">
+            <span class="cupom-btn-icone">📷</span>
+            <span>
+              <strong>Tirar Foto do Cupom</strong>
+              <small>Abrir câmera do celular</small>
+            </span>
+          </button>
+
+          <button type="button" class="cupom-btn-acao-upload secundario" onclick="document.getElementById('inputFotoCupomGaleria').click()">
+            <span class="cupom-btn-icone">🖼️</span>
+            <span>
+              <strong>Escolher Foto ou Print SEFAZ</strong>
+              <small>Selecionar imagem da galeria</small>
+            </span>
+          </button>
+
+          <div class="cupom-dica-print">
+            💡 Para notas da SEFAZ, tire um print da tela com os produtos visíveis e envie pela galeria acima.
+          </div>
+
+          <div class="cupom-rodape-chave">
+            <span id="cupomStatusChaveInline" style="font-size: 11.5px; color: var(--texto-suave);"></span>
+            <button type="button" class="cupom-link-chave" onclick="alternarConfigChaveScanner()">⚙️ Chave da API</button>
+          </div>
+        </div>
+
+        <!-- Loading com timeout garantido de 20s -->
+        <div id="cupomLoadingBox" class="cupom-loading-box" style="display: none;">
+          <div class="cupom-spinner"></div>
+          <div id="cupomLoadingTexto" style="font-size: 14px; font-weight: 700; color: var(--texto-principal);">
+            Lendo produtos do cupom...
+          </div>
+          <div style="font-size: 12px; color: var(--texto-suave);">
+            Aguarde alguns segundos (máximo 20s)
+          </div>
+        </div>
+
+        <button type="button" class="btn-cancelar-modal" onclick="fecharModalCupomFiscal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         MODAL 5: CONFERÊNCIA PRÉVIA DO CUPOM FISCAL (ITEM A ITEM)
+    =================================================================== -->
+    <div id="modalConferenciaCupom" class="modal-overlay">
+      <div class="modal-card cupom-conferencia-card">
+        <div class="recibo-topo" style="margin-bottom: 12px;">
+          <div class="recibo-icone" style="font-size: 32px;">🧾</div>
+          <div class="recibo-titulo" style="font-size: 18px;">Conferir Produtos do Cupom</div>
+          <div class="recibo-sub">Revise, edite ou desmarque itens antes de lançar</div>
+        </div>
+
+        <!-- Cabeçalho da Nota -->
+        <div class="cupom-conf-cabecalho">
+          <div class="cupom-campo-grupo">
+            <label>Supermercado</label>
+            <input type="text" id="confCupomSupermercado" class="campo-input-custom cupom-input-texto" oninput="atualizarCabecalhoCupom()" />
+          </div>
+
+          <div class="cupom-conf-grid-3">
+            <div class="cupom-campo-grupo">
+              <label>Data</label>
+              <input type="date" id="confCupomData" class="campo-input-custom cupom-input-texto" onchange="atualizarCabecalhoCupom()" />
+            </div>
+
+            <div class="cupom-campo-grupo">
+              <label>Desconto</label>
+              <div class="cupom-input-moeda">
+                <span class="cupom-moeda-prefixo">R$</span>
+                <input type="number" step="0.01" min="0" id="confCupomDesconto" class="cupom-input-num-flex" oninput="atualizarCabecalhoCupom()" />
+              </div>
+            </div>
+
+            <div class="cupom-campo-grupo">
+              <label>Total Nota</label>
+              <div class="cupom-input-moeda">
+                <span class="cupom-moeda-prefixo">R$</span>
+                <input type="number" step="0.01" min="0" id="confCupomTotalNota" class="cupom-input-num-flex" oninput="atualizarCabecalhoCupom()" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Destino do Lançamento -->
+        <div class="cupom-destino-box">
+          <div style="font-size: 11.5px; font-weight: 800; color: var(--texto-secundario); margin-bottom: 6px; text-transform: uppercase;">
+            Onde lançar os produtos?
+          </div>
+          <div class="cupom-destino-toggle">
+            <button type="button" id="btnDestinoListaAtiva" class="cupom-destino-btn ativo" onclick="selecionarDestinoCupom('ativa')">
+              <span>🛒</span>
+              <span id="confLabelListaAtiva">Lista Ativa</span>
+            </button>
+            <button type="button" id="btnDestinoNovaLista" class="cupom-destino-btn" onclick="selecionarDestinoCupom('nova')">
+              <span>✨ Nova Lista</span>
+            </button>
+          </div>
+          <div id="boxNomeNovaListaCupom" style="display: none; margin-top: 8px;">
+            <input type="text" id="confCupomNomeNovaLista" class="campo-input-custom cupom-input-texto" placeholder="Nome da nova lista..." oninput="atualizarCabecalhoCupom()" />
+          </div>
+        </div>
+
+        <!-- Barra de Seleção em Massa -->
+        <div class="cupom-conf-barra-resumo">
+          <label class="cupom-check-todos-label">
+            <input type="checkbox" id="confCheckTodos" checked onchange="alternarTodosItensCupom(this.checked)" />
+            <span id="confContadorSelecionados">0 de 0 selecionados</span>
+          </label>
+          <div style="font-size: 12.5px; font-weight: 700; color: var(--texto-principal);">
+            Soma: <strong id="confSomaSelecionados" style="color: var(--cor-marca);">R$ 0,00</strong>
+          </div>
+        </div>
+
+        <!-- Lista de Produtos Extraídos -->
+        <div id="confListaItensContainer" class="cupom-conf-lista">
+          <!-- Cards de itens injetados via cupom.js -->
+        </div>
+
+        <button type="button" class="cupom-btn-add-item" onclick="adicionarItemManualConferenciaCupom()">
+          + Adicionar produto manualmente
+        </button>
+
+        <!-- Confirmação Final -->
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 10px;">
+          <button type="button" class="btn-confirmar-finalizar" onclick="confirmarLancamentoCupom()">
+            ✅ Confirmar e Lançar Produtos
+          </button>
+          <div style="display: flex; gap: 8px;">
+            <button type="button" class="btn-cancelar-modal" style="flex: 1;" onclick="fecharModalConferenciaCupom(); abrirModalCupomFiscal();">
+              📷 Ler outro cupom
+            </button>
+            <button type="button" class="btn-cancelar-modal" style="flex: 1;" onclick="fecharModalConferenciaCupom()">
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
+         MODAL 6: SELETOR PESQUISÁVEL DE CATEGORIAS DO CUPOM
+    =================================================================== -->
+    <div id="modalCategoriaCupom" class="modal-overlay" style="z-index: 360;">
+      <div class="modal-card" style="max-width: 420px; padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div>
+            <div style="font-size: 15px; font-weight: 800; color: var(--texto-principal);">Escolher Categoria</div>
+            <div id="catCupomItemNome" style="font-size: 12px; color: var(--texto-secundario);">Produto</div>
+          </div>
+          <button type="button" style="border: none; background: none; font-size: 18px; cursor: pointer; color: var(--texto-suave);" onclick="fecharModalCategoriaCupom()">✕</button>
+        </div>
+
+        <input
+          type="text"
+          id="inputBuscaCategoriaCupom"
+          class="campo-input-custom"
+          style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--borda-padrao); font-size: 13px; margin-bottom: 12px;"
+          placeholder="🔍 Buscar categoria (ex: leite, carne, limpeza...)"
+          oninput="filtrarCategoriasCupom(this.value)"
+        />
+
+        <div id="listaCategoriasCupomOrganizada" class="cupom-cat-lista-scroll">
+          <!-- Grupos organizados injetados via cupom.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================================================================
          MENU INFERIOR (3 ABAS PRINCIPAIS) - DOCK MODERNO COM DESTAQUE EM COMPRAS
     =================================================================== -->
     <nav class="navegacao">
@@ -818,7 +1050,7 @@
       if ('caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
-            if (name !== 'meu-mercado-v15-cartsync') {
+            if (name !== 'meu-mercado-v16-cupom') {
               caches.delete(name);
             }
           }
@@ -829,7 +1061,8 @@
   <!-- Firebase App & Firestore Compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="/audio.js?v=20261029_v15"></script>
-  <script src="/app.js?v=20261029_v15"></script>
+  <script src="/audio.js?v=20261110_v16"></script>
+  <script src="/app.js?v=20261110_v16"></script>
+  <script src="/cupom.js?v=20261110_v16"></script>
 </body>
 </html>

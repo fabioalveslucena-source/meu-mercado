@@ -1,4 +1,4 @@
-const CACHE_NAME = 'meu-mercado-v15-cartsync';
+const CACHE_NAME = 'meu-mercado-v16-cupom';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -26,6 +26,7 @@ self.addEventListener('fetch', (e) => {
   if (
     e.request.method !== 'GET' ||
     e.request.url.includes('firestore.googleapis.com') ||
+    e.request.url.includes('generativelanguage.googleapis.com') ||
     e.request.url.includes('gstatic.com') ||
     e.request.url.includes('google.com')
   ) {

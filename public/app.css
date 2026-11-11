@@ -2060,3 +2060,503 @@ body.tema-escuro .dica-voz-box {
   transform: scale(0.96);
 }
 
+/* ============================================================================
+   🧾 LEITOR DE CUPOM FISCAL & CONFERÊNCIA PRÉVIA
+   ============================================================================ */
+.card-ler-cupom {
+  background: linear-gradient(135deg, #173f5f 0%, #205b7d 100%);
+  border-radius: var(--raio-lg);
+  padding: 20px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 8px 24px rgba(23, 63, 95, 0.22);
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+
+.card-ler-cupom:active {
+  transform: scale(0.98);
+}
+
+.card-ler-cupom .card-icone-redondo {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.btn-cupom-centro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--cor-azul-light);
+  border: 1px solid rgba(40, 126, 165, 0.35);
+  color: var(--cor-azul);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+body.tema-escuro .btn-cupom-centro {
+  color: #7dd3fc;
+  border-color: rgba(125, 211, 252, 0.35);
+}
+
+.cupom-perfil-chave-box,
+.cupom-config-chave-box {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--borda-padrao);
+  border-radius: var(--raio-md);
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+.cupom-status-chave {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.cupom-status-chave.ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.cupom-status-chave.pendente {
+  background: rgba(245, 158, 11, 0.15);
+  color: #d97706;
+}
+
+.cupom-area-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cupom-btn-acao-upload {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--raio-md);
+  border: 1.5px solid var(--borda-padrao);
+  background: var(--bg-card-subtle);
+  color: var(--texto-principal);
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.cupom-btn-acao-upload.primario {
+  background: linear-gradient(135deg, #188a55 0%, #10633c 100%);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 6px 18px rgba(24, 138, 85, 0.28);
+}
+
+.cupom-btn-acao-upload:active {
+  transform: scale(0.98);
+}
+
+.cupom-btn-acao-upload span:last-child {
+  display: flex;
+  flex-direction: column;
+}
+
+.cupom-btn-acao-upload strong {
+  font-size: 14.5px;
+  font-weight: 800;
+}
+
+.cupom-btn-acao-upload small {
+  font-size: 12px;
+  opacity: 0.85;
+}
+
+.cupom-btn-icone {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+.cupom-dica-print {
+  font-size: 12px;
+  color: var(--texto-secundario);
+  background: var(--bg-card-subtle);
+  border-radius: var(--raio-sm);
+  padding: 10px 12px;
+  line-height: 1.45;
+}
+
+.cupom-rodape-chave {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.cupom-link-chave {
+  background: none;
+  border: none;
+  color: var(--cor-azul);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cupom-loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 28px 16px;
+  text-align: center;
+}
+
+.cupom-spinner {
+  width: 42px;
+  height: 42px;
+  border: 4px solid var(--borda-padrao);
+  border-top-color: var(--cor-marca);
+  border-radius: 50%;
+  animation: cupomGirar 0.85s linear infinite;
+}
+
+@keyframes cupomGirar {
+  to { transform: rotate(360deg); }
+}
+
+.cupom-conferencia-card {
+  max-width: 560px;
+  padding: 18px;
+}
+
+.cupom-conf-cabecalho {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--borda-padrao);
+  border-radius: var(--raio-md);
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cupom-conf-grid-3 {
+  display: grid;
+  grid-template-columns: 1.1fr 0.95fr 0.95fr;
+  gap: 8px;
+}
+
+.cupom-campo-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cupom-campo-grupo label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--texto-secundario);
+}
+
+.cupom-input-texto,
+.cupom-input-num {
+  width: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borda-padrao);
+  background: var(--bg-card);
+  color: var(--texto-principal);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Flexbox obrigatório para prefixo R$ sem sobrepor números */
+.cupom-input-moeda {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borda-padrao);
+  background: var(--bg-card);
+  min-width: 0;
+}
+
+body.tema-escuro .cupom-input-moeda,
+body.tema-escuro .cupom-input-texto,
+body.tema-escuro .cupom-input-num {
+  background: #132f4c;
+  border-color: #1e3a5f;
+  color: #e7ebf0;
+}
+
+.cupom-moeda-prefixo {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--texto-suave);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.cupom-input-num-flex {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--texto-principal);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 0;
+  text-align: right;
+  outline: none;
+}
+
+body.tema-escuro .cupom-input-num-flex {
+  color: #e7ebf0;
+}
+
+.cupom-destino-box {
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--borda-padrao);
+  border-radius: var(--raio-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.cupom-destino-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.cupom-destino-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borda-padrao);
+  background: var(--bg-card);
+  color: var(--texto-principal);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cupom-destino-btn.ativo {
+  border-color: var(--cor-marca);
+  background: var(--cor-marca-light);
+  color: var(--cor-marca);
+}
+
+.cupom-conf-barra-resumo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 4px;
+  margin-bottom: 8px;
+}
+
+.cupom-check-todos-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--texto-principal);
+  cursor: pointer;
+}
+
+.cupom-conf-lista {
+  max-height: 38vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 2px;
+  margin-bottom: 10px;
+}
+
+.cupom-item-card {
+  background: var(--bg-card-subtle);
+  border: 1.5px solid var(--borda-padrao);
+  border-radius: var(--raio-md);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: opacity 0.18s ease, border-color 0.18s ease;
+}
+
+.cupom-item-card.selecionado {
+  border-color: rgba(24, 138, 85, 0.35);
+}
+
+.cupom-item-card.desmarcado {
+  opacity: 0.55;
+}
+
+.cupom-item-linha-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cupom-item-check-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.cupom-item-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--cor-marca);
+  cursor: pointer;
+}
+
+.cupom-input-nome {
+  flex: 1;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borda-padrao);
+  background: var(--bg-card);
+  color: var(--texto-principal);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.cupom-item-linha-valores {
+  display: grid;
+  grid-template-columns: 0.7fr 1fr 1fr;
+  gap: 8px;
+}
+
+.cupom-item-linha-cat {
+  display: flex;
+  align-items: center;
+}
+
+.cupom-btn-categoria {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borda-padrao);
+  background: var(--bg-card);
+  color: var(--texto-principal);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cupom-cat-seta {
+  font-size: 11px;
+  color: var(--cor-azul);
+}
+
+.cupom-btn-add-item {
+  width: 100%;
+  padding: 9px;
+  border-radius: 10px;
+  border: 1px dashed var(--cor-azul);
+  background: transparent;
+  color: var(--cor-azul);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cupom-vazio-aviso {
+  text-align: center;
+  padding: 20px 12px;
+  color: var(--texto-suave);
+  font-size: 13px;
+}
+
+.cupom-cat-lista-scroll {
+  max-height: 50vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cupom-cat-grupo-titulo {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--texto-suave);
+  margin-bottom: 6px;
+}
+
+.cupom-cat-grade {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.cupom-cat-opcao {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid var(--borda-padrao);
+  background: var(--bg-card-subtle);
+  color: var(--texto-principal);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cupom-cat-opcao.ativa {
+  border-color: var(--cor-marca);
+  background: var(--cor-marca-light);
+  color: var(--cor-marca);
+}
+
+.cupom-cat-icone {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 460px) {
+  .cupom-conf-grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .cupom-conf-grid-3 .cupom-campo-grupo:first-child {
+    grid-column: 1 / -1;
+  }
+  .cupom-item-linha-valores {
+    grid-template-columns: 0.65fr 1fr 1fr;
+    gap: 6px;
+  }
+  .card-ler-cupom {
+    padding: 16px 14px;
+    gap: 12px;
+  }
+}
+
